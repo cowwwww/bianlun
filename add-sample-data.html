@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PocketBase Setup</title>
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 32px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        button:hover { background: #45a049; }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>🚀 PocketBase Quick Setup</h1>
+    <p>This will set up your PocketBase with sample data.</p>
+    
+    <div id="status"></div>
+    
+    <button onclick="setupAdmin()">1. Setup Admin Account</button>
+    <button onclick="createCollections()">2. Create Collections</button>
+    <button onclick="addSampleData()">3. Add Sample Tournaments</button>
+    
+    <script>
+        const pb = new PocketBase('http://127.0.0.1:8090');
+        
+        function showStatus(message, type = 'info') {
+            const div = document.getElementById('status');
+            div.className = 'status ' + type;
+            div.innerHTML = message;
+        }
+        
+        async function setupAdmin() {
+            const email = prompt('Enter admin email:', 'admin@example.com');
+            const password = prompt('Enter admin password:', 'admin123456');
+            
+            if (!email || !password) {
+                showStatus('❌ Cancelled', 'error');
+                return;
+            }
+            
+            try {
+                // First time setup - this only works if no admin exists
+                await fetch('http://127.0.0.1:8090/api/admins', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        passwordConfirm: password
+                    })
+                });
+                
+                showStatus('✅ Admin account created! Email: ' + email, 'success');
+            } catch (error) {
+                showStatus('ℹ️ Admin might already exist. Try logging in at: http://127.0.0.1:8090/_/', 'info');
+            }
+        }
+        
+        async function createCollections() {
+            showStatus('⏳ Creating collections... Open Admin Dashboard to complete this step: http://127.0.0.1:8090/_/', 'info');
+            
+            setTimeout(() => {
+                showStatus(`
+                    <h3>Create these collections manually:</h3>
+                    <h4>1. tournaments collection:</h4>
+                    <ul>
+                        <li>name (text)</li>
+                        <li>title (text)</li>
+                        <li>description (text)</li>
+                        <li>startDate (text)</li>
+                        <li>endDate (text)</li>
+                        <li>location (text)</li>
+                        <li>type (text)</li>
+                        <li>status (text)</li>
+                        <li>organizer (text)</li>
+                        <li>contact (text)</li>
+                    </ul>
+                    <h4>2. topics collection:</h4>
+                    <ul>
+                        <li>text (text)</li>
+                        <li>explanation (text)</li>
+                        <li>area (text)</li>
+                        <li>language (text)</li>
+                    </ul>
+                    <p><strong>Don't forget to set API Rules to allow public read access!</strong></p>
+                `, 'info');
+            }, 100);
+        }
+        
+        async function addSampleData() {
+            try {
+                // Add sample tournaments
+                const tournaments = [
+                    {
+                        name: '2024全国辩论锦标赛',
+                        title: '2024全国辩论锦标赛',
+                        description: '全国最高水平的辩论比赛，汇聚各地精英辩手',
+                        startDate: '2024-06-01',
+                        endDate: '2024-06-03',
+                        location: '北京',
+                        type: 'debate',
+                        status: 'upcoming',
+                        organizer: '中国辩论协会',
+                        contact: 'contact@debate.cn'
+                    },
+                    {
+                        name: '青年模拟联合国大会',
+                        title: '青年模拟联合国大会',
+                        description: '锻炼国际视野，提升辩论技巧的绝佳平台',
+                        startDate: '2024-07-15',
+                        endDate: '2024-07-18',
+                        location: '上海',
+                        type: 'MUN',
+                        status: 'upcoming',
+                        organizer: '青年MUN组委会',
+                        contact: 'mun@youth.cn'
+                    },
+                    {
+                        name: '大学生创新辩论赛',
+                        title: '大学生创新辩论赛',
+                        description: '面向全国大学生的创新辩论比赛',
+                        startDate: '2024-08-20',
+                        endDate: '2024-08-22',
+                        location: '广州',
+                        type: 'debate',
+                        status: 'upcoming',
+                        organizer: '教育部',
+                        contact: 'edu@debate.cn'
+                    }
+                ];
+                
+                let successCount = 0;
+                for (const tournament of tournaments) {
+                    try {
+                        await pb.collection('tournaments').create(tournament);
+                        successCount++;
+                    } catch (e) {
+                        console.error('Error adding tournament:', e);
+                    }
+                }
+                
+                showStatus(`✅ Successfully added ${successCount} sample tournaments! Refresh your app to see them.`, 'success');
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message + '<br>Make sure you created the collections first!', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+

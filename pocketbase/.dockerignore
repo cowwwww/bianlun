@@ -1,0 +1,5 @@
+# Don't include pb_data in Docker image (use volume instead)
+pb_data/
+*.log
+.DS_Store
+

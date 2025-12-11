@@ -1,0 +1,202 @@
+import { useState, useEffect } from 'react';
+import {
+  Container,
+  Typography,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Box,
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
+import {
+  Timer as TimerIcon,
+  Add as AddIcon,
+  PlayArrow as PlayIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { getTimerProjects, deleteTimerProject, type TimerProject } from '../services/timerService';
+
+const ProjectList = () => {
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<TimerProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const data = await getTimerProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error loading timer projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (projectId: string) => {
+    setProjectToDelete(projectId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (projectToDelete) {
+      try {
+        await deleteTimerProject(projectToDelete);
+        setProjects(projects.filter(p => p.id !== projectToDelete));
+      } catch (error) {
+        console.error('Error deleting project:', error);
+      }
+    }
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
+  };
+
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+            计时器中心
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            管理您的所有计时器项目
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/create-project')}
+          size="large"
+        >
+          创建新计时器
+        </Button>
+      </Box>
+
+      {loading ? (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography>加载中...</Typography>
+        </Paper>
+      ) : projects.length === 0 ? (
+        <Paper sx={{ p: 6, textAlign: 'center' }}>
+          <TimerIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" gutterBottom>
+            还没有计时器项目
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            创建您的第一个计时器项目，开始管理您的时间
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/create-project')}
+          >
+            创建计时器
+          </Button>
+        </Paper>
+      ) : (
+        <Grid container spacing={3}>
+          {projects.map((project) => (
+            <Grid item xs={12} md={6} lg={4} key={project.id}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <TimerIcon color="primary" sx={{ mr: 1 }} />
+                    <Typography variant="h6" component="div">
+                      {project.name}
+                    </Typography>
+                  </Box>
+                  
+                  <Chip
+                    label={project.type === 'countdown' ? '倒计时' : '正计时'}
+                    size="small"
+                    color={project.type === 'countdown' ? 'primary' : 'success'}
+                    sx={{ mb: 2 }}
+                  />
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {project.description || '暂无描述'}
+                  </Typography>
+                  
+                  {project.type === 'countdown' && project.duration && (
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '1.2rem' }}>
+                      时长: {formatDuration(project.duration)}
+                    </Typography>
+                  )}
+                </CardContent>
+                
+                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                  <Box>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => navigate(`/run-timer/${project.id}`)}
+                      title="运行计时器"
+                    >
+                      <PlayIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="default"
+                      onClick={() => navigate(`/edit-project/${project.id}`)}
+                      title="编辑"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Box>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleDeleteClick(project.id)}
+                    title="删除"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>确认删除</DialogTitle>
+        <DialogContent>
+          <Typography>
+            确定要删除这个计时器项目吗？此操作无法撤销。
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>取消</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            删除
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+};
+
+export default ProjectList;

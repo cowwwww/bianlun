@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PocketBase 集合设置工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .step {
+            background: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 PocketBase 快速设置工具</h1>
+        
+        <div class="warning">
+            <strong>⚠️ 重要提示：</strong>确保 PocketBase 正在运行：<code>http://127.0.0.1:8090</code>
+        </div>
+
+        <h2>📋 设置步骤</h2>
+
+        <div class="step">
+            <h3>步骤 1: 打开 PocketBase Admin</h3>
+            <p>首先，打开 PocketBase 管理面板：</p>
+            <button onclick="window.open('http://127.0.0.1:8090/_/', '_blank')">
+                打开 PocketBase Admin 面板
+            </button>
+            <p><small>如果是第一次使用，您需要创建管理员账号</small></p>
+        </div>
+
+        <div class="step">
+            <h3>步骤 2: 创建 Collections（手动操作）</h3>
+            <p>在 PocketBase Admin 面板中，按照以下说明创建集合：</p>
+            
+            <h4>📦 Collection 1: <code>tournaments</code></h4>
+            <ol>
+                <li>点击 "New collection" 或 "新建集合"</li>
+                <li>Collection name: <code>tournaments</code></li>
+                <li>Type: Base collection</li>
+                <li>添加以下字段：</li>
+            </ol>
+            <pre>name            - Text (required)
+title           - Text
+description     - Text
+startDate       - Text
+endDate         - Text
+registrationDeadline - Text
+date            - Text
+location        - Text
+type            - Text
+status          - Text
+price           - Number
+teamsize        - Text
+organizer       - Text
+contact         - Text
+category        - Text
+image           - Text
+totalTeams      - Number
+playersPerTeam  - Number
+participationRequirements - Text
+registrationLink - Text
+ruleBookLink    - Text
+award           - Text</pre>
+            
+            <h4>📦 Collection 2: <code>topics</code></h4>
+            <pre>text            - Text (required)
+explanation     - Text
+area            - Text
+language        - Text
+tournament      - Text
+ratings         - JSON
+averageRating   - Number</pre>
+
+            <h4>📦 Collection 3: <code>timer_projects</code></h4>
+            <pre>name            - Text (required)
+description     - Text
+type            - Text (required)
+duration        - Number
+createdBy       - Text (required)</pre>
+        </div>
+
+        <div class="step">
+            <h3>步骤 3: 设置 API 权限</h3>
+            <p>为每个集合设置 API Rules（在 API Rules 标签）：</p>
+            <pre>List/Search Rule:  留空（公开访问）或 @request.auth.id != ""
+View Rule:         留空（公开访问）
+Create Rule:       @request.auth.id != ""
+Update Rule:       @request.auth.id != ""
+Delete Rule:       @request.auth.id != ""</pre>
+        </div>
+
+        <div class="step">
+            <h3>步骤 4: 添加示例数据（可选）</h3>
+            <p>您可以在 Admin 面板中手动添加几条测试数据，或者使用下面的按钮：</p>
+            <button onclick="addSampleTournament()">添加示例赛事数据</button>
+            <button onclick="addSampleTopic()">添加示例辩题数据</button>
+            <div id="result"></div>
+        </div>
+
+        <div class="info">
+            <strong>💡 提示：</strong>完成以上步骤后，刷新您的应用页面，错误应该就会消失了！
+        </div>
+
+        <h2>🔍 验证安装</h2>
+        <button onclick="checkCollections()">检查集合是否存在</button>
+        <div id="checkResult"></div>
+
+        <h2>📝 如果仍然出错</h2>
+        <div class="step">
+            <h3>常见问题排查：</h3>
+            <ol>
+                <li><strong>PocketBase 没有运行</strong> - 确保在终端运行 <code>./pocketbase serve</code></li>
+                <li><strong>端口错误</strong> - 确认 PocketBase 运行在 8090 端口</li>
+                <li><strong>集合名称拼写</strong> - 集合名必须完全匹配（小写）</li>
+                <li><strong>权限设置</strong> - 确保 API Rules 设置正确</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const PB_URL = 'http://127.0.0.1:8090';
+
+        async function addSampleTournament() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>正在添加示例数据...</p>';
+
+            try {
+                const response = await fetch(`${PB_URL}/api/collections/tournaments/records`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: '2024全国辩论锦标赛',
+                        title: '2024全国辩论锦标赛',
+                        description: '全国最高水平的辩论比赛，汇聚各地优秀辩手',
+                        startDate: '2024-06-01',
+                        endDate: '2024-06-03',
+                        registrationDeadline: '2024-05-15',
+                        date: '2024-06-01',
+                        location: '北京市',
+                        type: 'debate',
+                        status: 'upcoming',
+                        price: 0,
+                        teamsize: '4',
+                        organizer: '中国辩论协会',
+                        contact: 'contact@debate.cn',
+                        category: '辩论',
+                        image: '',
+                        totalTeams: 32,
+                        playersPerTeam: 4,
+                        participationRequirements: '高中及以上学历',
+                        registrationLink: '',
+                        ruleBookLink: '',
+                        award: '冠军奖金10000元'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = '<div class="success">✅ 示例赛事数据添加成功！ID: ' + data.id + '</div>';
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = '<div class="error">❌ 添加失败：' + JSON.stringify(error) + '<br><br>请先在 Admin 面板中创建 tournaments 集合！</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ 错误：' + error.message + '<br><br>请确保 PocketBase 正在运行并且已创建集合！</div>';
+            }
+        }
+
+        async function addSampleTopic() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>正在添加示例辩题...</p>';
+
+            try {
+                const response = await fetch(`${PB_URL}/api/collections/topics/records`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: '科技发展是否会让人类更加孤独',
+                        explanation: '探讨科技进步对人际关系和社会连接的影响',
+                        area: 'technology',
+                        language: 'chinese',
+                        tournament: '',
+                        ratings: {},
+                        averageRating: 0
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = '<div class="success">✅ 示例辩题数据添加成功！ID: ' + data.id + '</div>';
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = '<div class="error">❌ 添加失败：' + JSON.stringify(error) + '<br><br>请先在 Admin 面板中创建 topics 集合！</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ 错误：' + error.message + '<br><br>请确保 PocketBase 正在运行并且已创建集合！</div>';
+            }
+        }
+
+        async function checkCollections() {
+            const resultDiv = document.getElementById('checkResult');
+            resultDiv.innerHTML = '<p>正在检查...</p>';
+
+            const collections = ['tournaments', 'topics', 'timer_projects'];
+            let html = '<h3>集合状态：</h3>';
+
+            for (const collectionName of collections) {
+                try {
+                    const response = await fetch(`${PB_URL}/api/collections/${collectionName}/records?perPage=1`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        html += `<div class="success">✅ ${collectionName}: 存在 (${data.totalItems || 0} 条记录)</div>`;
+                    } else {
+                        html += `<div class="error">❌ ${collectionName}: 不存在或无权限访问</div>`;
+                    }
+                } catch (error) {
+                    html += `<div class="error">❌ ${collectionName}: 检查失败 - ${error.message}</div>`;
+                }
+            }
+
+            resultDiv.innerHTML = html;
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', () => {
+            setTimeout(checkCollections, 1000);
+        });
+    </script>
+</body>
+</html>
+
