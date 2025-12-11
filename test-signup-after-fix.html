@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试注册功能</title>
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .log {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+            color: #a8e6b0;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+            color: #ff6b7a;
+        }
+
+        .log-entry.info {
+            border-left-color: #17a2b8;
+            color: #7dd3e0;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .status.pending {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #17a2b8;
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .button-secondary {
+            background: #6c757d !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 测试注册功能</h1>
+
+        <div id="status" class="status pending">
+            ⏳ 准备测试...
+        </div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="name">姓名 *</label>
+                <input type="text" id="name" required placeholder="请输入姓名" value="测试用户">
+            </div>
+
+            <div class="form-group">
+                <label for="wechatId">微信号 *</label>
+                <input type="text" id="wechatId" required placeholder="6-20位，字母开头" value="">
+                <div class="helper-text">将自动生成随机微信号，或手动输入</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">密码 *</label>
+                <input type="password" id="password" required placeholder="至少6位字符" value="123456">
+            </div>
+
+            <button type="submit" id="submitBtn">🚀 测试注册</button>
+            
+            <div class="button-group">
+                <button type="button" class="button-secondary" onclick="clearLog()">🗑️ 清空日志</button>
+                <button type="button" class="button-secondary" onclick="generateWechatId()">🔄 生成新微信号</button>
+            </div>
+        </form>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        // Initialize PocketBase
+        const pb = new PocketBase('http://127.0.0.1:8090');
+        
+        // Generate random WeChat ID
+        function generateWechatId() {
+            const prefix = 'test';
+            const random = Math.floor(Math.random() * 999999);
+            const wechatId = `${prefix}${random}`;
+            document.getElementById('wechatId').value = wechatId;
+            addLog('info', `生成新微信号: ${wechatId}`);
+            return wechatId;
+        }
+
+        // Add log entry
+        function addLog(type, message) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Clear log
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            addLog('info', '日志已清空');
+        }
+
+        // Update status
+        function updateStatus(type, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        // Check PocketBase connection
+        async function checkConnection() {
+            try {
+                addLog('info', '正在检查 PocketBase 连接...');
+                const health = await fetch('http://127.0.0.1:8090/api/health');
+                if (health.ok) {
+                    addLog('success', '✅ PocketBase 连接正常');
+                    return true;
+                } else {
+                    addLog('error', '❌ PocketBase 连接失败');
+                    return false;
+                }
+            } catch (error) {
+                addLog('error', `❌ 无法连接到 PocketBase: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Test signup
+        async function testSignup(name, wechatId, password) {
+            try {
+                addLog('info', '开始测试注册...');
+                addLog('info', `姓名: ${name}`);
+                addLog('info', `微信号: ${wechatId}`);
+                addLog('info', `密码: ${'*'.repeat(password.length)}`);
+
+                // Create user data
+                const userData = {
+                    username: wechatId,
+                    email: `${wechatId}@wechat.user`,
+                    password: password,
+                    passwordConfirm: password,
+                    full_name: name,
+                    wechat_id: wechatId
+                };
+
+                addLog('info', '发送注册请求到 PocketBase...');
+                addLog('info', `POST /api/collections/users/records`);
+
+                // Attempt to create user
+                const record = await pb.collection('users').create(userData);
+
+                addLog('success', '✅ 用户创建成功！');
+                addLog('success', `用户 ID: ${record.id}`);
+                addLog('success', `用户名: ${record.username}`);
+                addLog('success', `姓名: ${record.full_name}`);
+                addLog('success', `微信号: ${record.wechat_id}`);
+
+                // Try to authenticate
+                addLog('info', '尝试自动登录...');
+                const authData = await pb.collection('users').authWithPassword(wechatId, password);
+                
+                addLog('success', '✅ 自动登录成功！');
+                addLog('success', `认证令牌已生成`);
+                addLog('success', `令牌长度: ${authData.token.length} 字符`);
+
+                updateStatus('success', '✅ 注册和登录测试成功！');
+                return true;
+
+            } catch (error) {
+                addLog('error', `❌ 注册失败: ${error.message}`);
+                
+                if (error.status === 403) {
+                    addLog('error', '错误原因: 权限不足 (403 Forbidden)');
+                    addLog('error', '这意味着 Users 集合的 API Rules 仍然限制了创建操作');
+                    addLog('error', '');
+                    addLog('info', '解决方案:');
+                    addLog('info', '1. 打开 PocketBase 管理后台');
+                    addLog('info', '2. 进入 Collections → users → API Rules');
+                    addLog('info', '3. 确保 "Create" 规则完全为空（留空）');
+                    addLog('info', '4. 保存更改后重新测试');
+                } else if (error.status === 400) {
+                    addLog('error', '错误原因: 数据验证失败 (400 Bad Request)');
+                    if (error.data?.data) {
+                        addLog('error', `详细信息: ${JSON.stringify(error.data.data, null, 2)}`);
+                    }
+                    
+                    // Check for specific field errors
+                    if (error.data?.data?.username) {
+                        addLog('error', '用户名问题: 可能已被使用或格式不正确');
+                        addLog('info', '尝试生成新的微信号再试一次');
+                    }
+                    if (error.data?.data?.email) {
+                        addLog('error', '邮箱问题: 可能已被使用或格式不正确');
+                    }
+                } else if (error.message.includes('fetch')) {
+                    addLog('error', '错误原因: 网络连接问题');
+                    addLog('info', '请确认 PocketBase 正在运行 (http://127.0.0.1:8090)');
+                }
+
+                updateStatus('error', '❌ 注册测试失败');
+                return false;
+            }
+        }
+
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ 测试中...';
+            
+            clearLog();
+            updateStatus('pending', '⏳ 正在测试...');
+
+            // Check connection first
+            const connected = await checkConnection();
+            if (!connected) {
+                updateStatus('error', '❌ 无法连接到 PocketBase');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 测试注册';
+                return;
+            }
+
+            // Get form values
+            let name = document.getElementById('name').value.trim();
+            let wechatId = document.getElementById('wechatId').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Generate WeChat ID if empty
+            if (!wechatId) {
+                wechatId = generateWechatId();
+            }
+
+            // Validate
+            if (!name || !password) {
+                addLog('error', '请填写所有必填字段');
+                updateStatus('error', '❌ 表单验证失败');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 测试注册';
+                return;
+            }
+
+            if (password.length < 6) {
+                addLog('error', '密码至少需要6个字符');
+                updateStatus('error', '❌ 密码太短');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 测试注册';
+                return;
+            }
+
+            // Run test
+            await testSignup(name, wechatId, password);
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🚀 测试注册';
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            addLog('info', '=== 注册功能测试工具已加载 ===');
+            addLog('info', 'PocketBase URL: http://127.0.0.1:8090');
+            addLog('info', '');
+            addLog('info', '使用说明:');
+            addLog('info', '1. 填写或使用默认的测试数据');
+            addLog('info', '2. 点击"测试注册"按钮');
+            addLog('info', '3. 查看日志了解测试结果');
+            addLog('info', '');
+            
+            // Generate initial WeChat ID
+            generateWechatId();
+            
+            updateStatus('pending', '📝 请填写表单并开始测试');
+        });
+    </script>
+</body>
+</html>
+

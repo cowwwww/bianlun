@@ -6,17 +6,9 @@ import {
   Button,
   Container,
   CircularProgress,
-  Divider,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/authService';
-import { loginWithWeChat } from '../services/wechatAuthService';
-
-// WeChat ID to Email mapping for existing users (legacy support)
-const wechatToEmailMapping: { [key: string]: string } = {
-  'cqhcqh09': 'caoqianhui09@gmail.com',
-  'laocao0931': 'qcao0532@gmail.com',
-};
 
 const LoginPage = () => {
   const [wechatId, setWechatId] = useState('');
@@ -24,18 +16,6 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  // Generate email from WeChat ID (same logic as signup)
-  const generateEmailFromWechatId = (wechatId: string): string => {
-    // Check if WeChat ID already has a mapped email (legacy users)
-    const existingEmail = wechatToEmailMapping[wechatId.toLowerCase()];
-    if (existingEmail) {
-      return existingEmail;
-    }
-    
-    // Generate new email format: wechatid@tournament.app
-    return `${wechatId.toLowerCase()}@tournament.app`;
-  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -50,50 +30,21 @@ const LoginPage = () => {
         return;
       }
 
-      // Convert WeChat ID to email
-      const email = generateEmailFromWechatId(wechatId.trim());
-
-      await auth.signIn(email, password);
-      navigate('/');
-    } catch (error: any) {
+      // Login with WeChat ID directly
+      await auth.signIn(wechatId.trim(), password);
+      navigate('/profile');
+    } catch (error) {
       console.error('Error signing in:', error);
-      const errorMessage = error.message || '';
+      const errorMessage = (error as Error).message || '';
       
-      // Provide helpful error messages
-      if (errorMessage.includes('Invalid login credentials')) {
+      // Provide helpful error messages in Chinese
+      if (errorMessage.includes('Invalid credentials') || errorMessage.includes('Invalid login')) {
         setError('微信号或密码错误，请检查后重试');
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
         setError('网络连接失败，请检查网络后重试');
       } else {
-        setError(errorMessage || '登录失败，请重试');
+        setError('登录失败，请重试');
       }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAnonymousSignup = async () => {
-    setLoading(true);
-    try {
-      // Anonymous login not supported in PocketBase version
-      setError('匿名登录暂不支持，请使用账号登录');
-    } catch (error: any) {
-      console.error('Error signing in anonymously:', error);
-      setError(error.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Apple login not supported in PocketBase version
-      setError('Apple登录暂不支持，请使用账号登录');
-    } catch (error: any) {
-      console.error('Error during Apple login:', error);
-      setError(error.message || 'An unexpected error occurred during Apple login.');
     } finally {
       setLoading(false);
     }
@@ -149,34 +100,6 @@ const LoginPage = () => {
             disabled={loading}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : '登录'}
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => navigate('/auth/wechat/login')}
-            disabled={loading}
-            sx={{ 
-              mb: 2, 
-              bgcolor: '#07C160', 
-              color: '#fff', 
-              '&:hover': { bgcolor: '#06AD56' },
-              fontSize: 16,
-              py: 1.5
-            }}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : '🎯 使用微信登录'}
-          </Button>
-          
-          <Divider sx={{ my: 2 }}>或</Divider>
-          
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={handleAnonymousSignup}
-            disabled={loading}
-            sx={{ mb: 2 }}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : '游客访问'}
           </Button>
           {error && !loading && (
             <Typography color="error" variant="body2" align="center" sx={{ mt: 2 }}>

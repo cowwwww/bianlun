@@ -36,13 +36,13 @@ const Profile = () => {
       <Paper sx={{ p: 4 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
           <Avatar sx={{ width: 80, height: 80, mb: 2 }}>
-            {user.displayName?.[0] || user.email[0].toUpperCase()}
+            {user.name?.[0] || user.wechatId?.[0]?.toUpperCase() || '?'}
           </Avatar>
           <Typography variant="h5" gutterBottom>
-            {user.displayName || '用户'}
+            {user.name || '用户'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {user.email}
+            微信号：{user.wechatId || '-'}
           </Typography>
         </Box>
 
@@ -51,7 +51,7 @@ const Profile = () => {
             账户信息
           </Typography>
           <Typography variant="body2">
-            会员类型：{user.subscriptionType || 'free'}
+            用户ID：{user.id || '-'}
           </Typography>
         </Box>
 

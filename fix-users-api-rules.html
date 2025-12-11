@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 修复 Users 集合 API 规则</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .error-box h3 {
+            color: #721c24;
+            margin-bottom: 10px;
+        }
+
+        .error-box code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .step h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.success {
+            background: #28a745;
+        }
+
+        .rules-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+
+        .rules-table th,
+        .rules-table td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .rules-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .rules-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .code {
+            background: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid #dee2e6;
+        }
+
+        ol, ul {
+            margin-left: 25px;
+            line-height: 2;
+        }
+
+        ol li, ul li {
+            margin: 10px 0;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin: 15px 0;
+        }
+
+        .screenshot-placeholder {
+            background: #e9ecef;
+            border: 2px dashed #adb5bd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            color: #6c757d;
+            margin: 15px 0;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 修复 Users 集合 API 规则</h1>
+
+        <!-- Error Explanation -->
+        <div class="card">
+            <h2>❌ 当前错误</h2>
+            <div class="error-box">
+                <h3>错误信息：</h3>
+                <code>ClientResponseError 403: Only admins can perform this action.</code>
+                
+                <h3 style="margin-top: 15px;">问题原因：</h3>
+                <p>您的 PocketBase <strong>Users</strong> 集合的 API 规则设置过于严格，不允许公开注册新用户。</p>
+                
+                <h3 style="margin-top: 15px;">发生位置：</h3>
+                <p>当用户尝试注册账号时，前端调用：</p>
+                <code>pb.collection('users').create({...})</code>
+                <p style="margin-top: 10px;">PocketBase 拒绝了这个请求，因为 "Create" 规则设置为只允许管理员创建用户。</p>
+            </div>
+        </div>
+
+        <!-- Quick Fix Guide -->
+        <div class="card">
+            <h2>⚡ 快速修复指南</h2>
+            
+            <div class="step">
+                <h3><span class="step-number">1</span> 打开 PocketBase 管理后台</h3>
+                <p>点击下面的按钮打开 PocketBase 管理后台，或手动访问：</p>
+                <p><code class="code">http://127.0.0.1:8090/_/</code></p>
+                <button onclick="openAdmin()">🔧 打开 PocketBase 管理后台</button>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-number">2</span> 找到 Users 集合</h3>
+                <ol>
+                    <li>在左侧菜单栏，点击 <strong class="highlight">Collections</strong></li>
+                    <li>在集合列表中，找到并点击 <strong class="highlight">users</strong> 集合</li>
+                </ol>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-number">3</span> 切换到 API Rules 标签</h3>
+                <ol>
+                    <li>在 Users 集合页面，找到顶部的标签栏</li>
+                    <li>点击 <strong class="highlight">API Rules</strong> 标签</li>
+                </ol>
+                <div class="info-box">
+                    <strong>💡 提示：</strong> API Rules 控制谁可以对集合执行哪些操作（列表、查看、创建、更新、删除）
+                </div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-number">4</span> 配置正确的 API 规则</h3>
+                <p>按照下表设置每个操作的规则：</p>
+                
+                <table class="rules-table">
+                    <thead>
+                        <tr>
+                            <th>操作</th>
+                            <th>规则表达式</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>List/Search</strong></td>
+                            <td><code class="code">@request.auth.id != ""</code></td>
+                            <td>只有已登录用户可以列出用户</td>
+                        </tr>
+                        <tr>
+                            <td><strong>View</strong></td>
+                            <td><code class="code">@request.auth.id != ""</code></td>
+                            <td>只有已登录用户可以查看用户详情</td>
+                        </tr>
+                        <tr style="background: #d4edda !important;">
+                            <td><strong>Create</strong> ⚠️</td>
+                            <td><code class="code">留空</code> 或 <code class="code">""</code></td>
+                            <td><strong>关键！允许任何人注册新用户</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Update</strong></td>
+                            <td><code class="code">@request.auth.id = id</code></td>
+                            <td>用户只能更新自己的资料</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Delete</strong></td>
+                            <td><code class="code">@request.auth.id = id</code></td>
+                            <td>用户只能删除自己的账号</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning-box">
+                    <strong>⚠️ 重要：Create 规则必须留空！</strong><br>
+                    这是最关键的设置。如果 Create 规则不为空，普通用户将无法注册。<br>
+                    <br>
+                    <strong>具体操作：</strong>
+                    <ol style="margin-top: 10px;">
+                        <li>找到 <strong>Create</strong> 规则的输入框</li>
+                        <li>删除里面的所有内容，使其<strong>完全为空</strong></li>
+                        <li>不要输入任何文字，包括空格</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-number">5</span> 保存更改</h3>
+                <ol>
+                    <li>确认所有规则都正确设置</li>
+                    <li>点击页面顶部或底部的 <strong class="highlight">Save changes</strong> 按钮</li>
+                    <li>等待保存成功提示</li>
+                </ol>
+                <div class="success-box">
+                    <strong>✅ 成功后：</strong> PocketBase 会立即应用新规则，不需要重启服务。
+                </div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-number">6</span> 测试注册功能</h3>
+                <p>保存后，立即测试注册功能：</p>
+                <div class="button-group">
+                    <button onclick="openFrontend()">🌐 打开前端应用</button>
+                    <button onclick="openSignup()" class="success">📝 直接打开注册页面</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Rule Explanation -->
+        <div class="card">
+            <h2>📚 规则详解</h2>
+            
+            <h3>什么是 API Rules？</h3>
+            <p>API Rules 是 PocketBase 的权限控制系统，使用表达式来决定谁可以执行什么操作。</p>
+
+            <h3>常用规则表达式：</h3>
+            <table class="rules-table">
+                <thead>
+                    <tr>
+                        <th>表达式</th>
+                        <th>含义</th>
+                        <th>适用场景</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="code">留空</code></td>
+                        <td>允许所有人（包括未登录用户）</td>
+                        <td>用户注册（Create）</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">@request.auth.id != ""</code></td>
+                        <td>只允许已登录用户</td>
+                        <td>查看用户列表、个人资料</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">@request.auth.id = id</code></td>
+                        <td>只允许用户访问自己的数据</td>
+                        <td>更新/删除个人资料</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">@request.auth.role = "admin"</code></td>
+                        <td>只允许管理员</td>
+                        <td>管理员操作</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box">
+                <strong>💡 为什么 Create 要留空？</strong><br>
+                因为注册时用户还<strong>没有登录</strong>，所以必须允许未认证的请求创建用户记录。<br>
+                登录后，PocketBase 会自动验证用户身份。
+            </div>
+        </div>
+
+        <!-- Verification Steps -->
+        <div class="card">
+            <h2>✅ 验证修复是否成功</h2>
+            
+            <h3>方法 1：使用前端应用测试</h3>
+            <ol>
+                <li>打开前端应用的注册页面</li>
+                <li>填写注册信息：
+                    <ul>
+                        <li>姓名：测试用户</li>
+                        <li>微信号：test_user_001（6-20位，字母开头）</li>
+                        <li>密码：123456（至少6位）</li>
+                        <li>确认密码：123456</li>
+                    </ul>
+                </li>
+                <li>点击"注册账号"</li>
+                <li>如果成功，会自动跳转到个人资料页面</li>
+            </ol>
+            <button onclick="openSignup()" class="success">📝 打开注册页面测试</button>
+
+            <h3 style="margin-top: 30px;">方法 2：查看浏览器控制台</h3>
+            <ol>
+                <li>在注册页面按 <code class="code">F12</code> 打开开发者工具</li>
+                <li>切换到 <strong>Console</strong> 标签</li>
+                <li>尝试注册，观察控制台输出</li>
+                <li>如果看到 "User signed up successfully"，说明成功</li>
+                <li>如果还是看到 403 错误，检查 API Rules 是否正确保存</li>
+            </ol>
+
+            <h3 style="margin-top: 30px;">方法 3：在 PocketBase 后台查看</h3>
+            <ol>
+                <li>注册成功后，打开 PocketBase 管理后台</li>
+                <li>进入 <strong>Collections</strong> → <strong>users</strong></li>
+                <li>在 <strong>Records</strong> 标签中应该能看到新创建的用户</li>
+            </ol>
+            <button onclick="openAdmin()" class="secondary">🔧 打开 PocketBase 后台</button>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="card">
+            <h2>🔍 故障排查</h2>
+            
+            <h3>如果修改后仍然报错：</h3>
+            
+            <div class="step">
+                <h4>1. 确认 Create 规则确实为空</h4>
+                <ul>
+                    <li>重新打开 Users 集合的 API Rules 标签</li>
+                    <li>检查 Create 规则输入框是否完全为空</li>
+                    <li>不应该有任何文字、空格或符号</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h4>2. 确认已保存更改</h4>
+                <ul>
+                    <li>查看页面顶部是否显示 "Saved" 或成功提示</li>
+                    <li>如果没有，点击 "Save changes" 按钮</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h4>3. 刷新前端应用</h4>
+                <ul>
+                    <li>在前端页面按 <code class="code">Ctrl + F5</code> (Windows) 或 <code class="code">Cmd + Shift + R</code> (Mac)</li>
+                    <li>强制刷新页面，清除缓存</li>
+                    <li>重新尝试注册</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h4>4. 检查 PocketBase 是否运行</h4>
+                <ul>
+                    <li>确认 PocketBase 服务正在运行</li>
+                    <li>访问 <code class="code">http://127.0.0.1:8090/_/</code> 应该能打开管理后台</li>
+                    <li>如果打不开，重启 PocketBase 服务</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h4>5. 检查集合名称</h4>
+                <ul>
+                    <li>确认集合名称确实是 <code class="code">users</code>（全小写）</li>
+                    <li>不是 <code class="code">Users</code> 或其他变体</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Alternative: Auth Collection -->
+        <div class="card">
+            <h2>🔄 备选方案：使用 Auth Collection</h2>
+            
+            <div class="info-box">
+                <strong>💡 提示：</strong> 如果您的 Users 集合类型是 "Auth Collection"，API Rules 设置会略有不同。
+            </div>
+
+            <p>对于 Auth Collection 类型的 Users 集合：</p>
+            <ol>
+                <li>进入 Users 集合的 API Rules</li>
+                <li>确保以下设置：
+                    <ul>
+                        <li><strong>List/Search:</strong> <code class="code">@request.auth.id != ""</code></li>
+                        <li><strong>View:</strong> <code class="code">@request.auth.id != ""</code></li>
+                        <li><strong>Create:</strong> <code class="code">留空</code> ✅ 关键！</li>
+                        <li><strong>Update:</strong> <code class="code">@request.auth.id = id</code></li>
+                        <li><strong>Delete:</strong> <code class="code">@request.auth.id = id</code></li>
+                    </ul>
+                </li>
+            </ol>
+
+            <div class="warning-box">
+                <strong>特别注意：</strong> 对于 Auth Collection，Create 规则留空会自动允许公开注册，但 PocketBase 会自动处理密码加密和验证。
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h2>⚡ 快捷操作</h2>
+            <div class="button-group">
+                <button onclick="openAdmin()">🔧 打开 PocketBase 后台</button>
+                <button onclick="openFrontend()" class="secondary">🌐 打开前端应用</button>
+                <button onclick="openSignup()" class="success">📝 打开注册页面</button>
+                <button onclick="openLogin()" class="secondary">🔑 打开登录页面</button>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="card">
+            <h2>❓ 常见问题</h2>
+            
+            <h3>Q: 为什么 Create 规则要留空而不是设置权限？</h3>
+            <p><strong>A:</strong> 因为用户注册时还没有登录，无法验证身份。如果设置任何权限要求，用户将无法注册。这是正常的设计模式。</p>
+
+            <h3>Q: 这样设置安全吗？</h3>
+            <p><strong>A:</strong> 安全。虽然允许公开注册，但：</p>
+            <ul>
+                <li>PocketBase 会验证数据格式（email、密码长度等）</li>
+                <li>密码会自动加密存储</li>
+                <li>其他操作（更新、删除）仍然受到保护</li>
+                <li>可以通过其他方式限制注册（如验证码、邮箱验证）</li>
+            </ul>
+
+            <h3>Q: 修改后需要重启 PocketBase 吗？</h3>
+            <p><strong>A:</strong> 不需要。PocketBase 会立即应用 API Rules 的更改。</p>
+
+            <h3>Q: 我不想允许公开注册怎么办？</h3>
+            <p><strong>A:</strong> 如果不想允许公开注册，您需要：</p>
+            <ul>
+                <li>使用管理员账号在 PocketBase 后台手动创建用户</li>
+                <li>或者实现一个后端 API，用管理员权限创建用户</li>
+                <li>或者使用邀请码系统</li>
+            </ul>
+
+            <h3>Q: 为什么我看到的界面和描述不一样？</h3>
+            <p><strong>A:</strong> PocketBase 的版本可能不同，界面会有细微差异，但核心概念相同。请找到 "API Rules" 或类似的权限设置部分。</p>
+        </div>
+    </div>
+
+    <script>
+        function openAdmin() {
+            window.open('http://127.0.0.1:8090/_/', '_blank');
+        }
+
+        function openFrontend() {
+            window.open('http://localhost:5173', '_blank');
+        }
+
+        function openSignup() {
+            window.open('http://localhost:5173/signup', '_blank');
+        }
+
+        function openLogin() {
+            window.open('http://localhost:5173/login', '_blank');
+        }
+    </script>
+</body>
+</html>
+

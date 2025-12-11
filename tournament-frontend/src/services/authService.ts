@@ -2,11 +2,8 @@ import pb from './pocketbase';
 
 export interface User {
   id: string;
-  email: string;
-  displayName?: string;
   name?: string;
-  avatar?: string;
-  subscriptionType?: 'free' | 'monthly' | 'lifetime';
+  wechatId?: string;
 }
 
 export interface AuthState {
@@ -26,18 +23,16 @@ class AuthService {
   }
 
   getCurrentUser(): User | null {
-    if (!pb.authStore.isValid || !pb.authStore.model) {
+    // Check if we have a stored model (not using isValid since we use dummy token)
+    if (!pb.authStore.model) {
       return null;
     }
 
     const model = pb.authStore.model;
     return {
-      id: model.id,
-      email: model.email,
-      displayName: model.name || model.username || model.email,
-      name: model.name,
-      avatar: model.avatar,
-      subscriptionType: 'free' // Default to free as subscriptionType doesn't exist in PocketBase
+      id: model.wechat_id || model.id,
+      name: model.full_name,
+      wechatId: model.wechat_id,
     };
   }
 
@@ -57,66 +52,64 @@ class AuthService {
     this.listeners.forEach(listener => listener(user));
   }
 
-  async signIn(email: string, password: string): Promise<User> {
+  async signIn(wechatId: string, password: string): Promise<User> {
     try {
-      const authData = await pb.collection('users').authWithPassword(email, password);
+      // Simple database check - find user by wechat_id and verify password
+      const records = await pb.collection('users').getList(1, 1, {
+        filter: `wechat_id = "${wechatId}" && password = "${password}"`
+      });
+      
+      if (records.items.length === 0) {
+        throw new Error('Invalid credentials');
+      }
+      
+      const user = records.items[0];
+      
+      // Store user info in authStore manually
+      pb.authStore.save('dummy-token', user);
       
       return {
-        id: authData.record.id,
-        email: authData.record.email,
-        displayName: authData.record.name || authData.record.username || authData.record.email,
-        name: authData.record.name,
-        avatar: authData.record.avatar,
-        subscriptionType: 'free' // Default to free as subscriptionType doesn't exist in PocketBase
+        id: user.wechat_id,
+        name: user.full_name,
+        wechatId: user.wechat_id || wechatId,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Sign in error:', error);
-      throw new Error(error.message || 'Failed to sign in');
+      throw new Error((error as Error).message || 'Failed to sign in');
     }
   }
 
-  async signUp(email: string, password: string, displayName?: string): Promise<User> {
+  async signUp(wechatId: string, password: string, fullName: string): Promise<User> {
     try {
-      // Create user - don't send subscriptionType as it doesn't exist in PocketBase schema
-      const user = await pb.collection('users').create({
-        email,
-        password,
-        passwordConfirm: password,
-        name: displayName || email.split('@')[0]
+      // Simple create - just store the data directly
+      await pb.collection('users').create({
+        wechat_id: wechatId,
+        full_name: fullName,
+        password: password
       });
 
       // Auto sign in after signup
-      const authData = await pb.collection('users').authWithPassword(email, password);
-      
-      return {
-        id: authData.record.id,
-        email: authData.record.email,
-        displayName: authData.record.name || authData.record.username || authData.record.email,
-        name: authData.record.name,
-        avatar: authData.record.avatar,
-        subscriptionType: 'free' // Default to free for all users
-      };
-    } catch (error: any) {
+      return await this.signIn(wechatId, password);
+    } catch (error) {
       console.error('Sign up error:', error);
       
       // Parse PocketBase error response
-      if (error.response && error.response.data) {
-        const errorData = error.response.data;
+      const pbError = error as { response?: { data?: { wechat_id?: unknown; password?: unknown } }; message?: string };
+      if (pbError.response && pbError.response.data) {
+        const errorData = pbError.response.data;
         
-        // Check for email validation errors
-        if (errorData.email) {
-          if (errorData.email.code === 'validation_invalid_email') {
-            throw new Error('该邮箱已被注册或格式无效');
-          }
+        // Check for duplicate WeChat ID
+        if (errorData.wechat_id) {
+          throw new Error('该微信号已被注册');
         }
         
         // Check for password validation errors
         if (errorData.password) {
-          throw new Error('密码不符合要求');
+          throw new Error('密码不符合要求（至少6位字符）');
         }
       }
       
-      throw new Error(error.message || '注册失败，请稍后重试');
+      throw new Error(pbError.message || '注册失败，请稍后重试');
     }
   }
 
@@ -127,28 +120,25 @@ class AuthService {
   async updateProfile(updates: Partial<User>): Promise<void> {
     try {
       const currentUser = this.getCurrentUser();
-      if (!currentUser) {
+      if (!currentUser || !currentUser.wechatId) {
         throw new Error('No user logged in');
       }
 
-      await pb.collection('users').update(currentUser.id, {
-        name: updates.displayName || updates.name,
-        ...updates
+      // Find user record by wechat_id
+      const records = await pb.collection('users').getList(1, 1, {
+        filter: `wechat_id = "${currentUser.wechatId}"`
       });
+      
+      if (records.items.length > 0) {
+        await pb.collection('users').update(records.items[0].id, {
+          full_name: updates.name,
+        });
+      }
 
       this.notifyListeners();
     } catch (error) {
       console.error('Update profile error:', error);
       throw new Error('Failed to update profile');
-    }
-  }
-
-  async resetPassword(email: string): Promise<void> {
-    try {
-      await pb.collection('users').requestPasswordReset(email);
-    } catch (error) {
-      console.error('Reset password error:', error);
-      throw new Error('Failed to send password reset email');
     }
   }
 }

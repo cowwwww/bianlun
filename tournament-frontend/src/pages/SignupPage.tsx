@@ -11,33 +11,14 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/authService';
 
-// WeChat ID to Email mapping for existing users
-const wechatToEmailMapping: { [key: string]: string } = {
-  'cqhcqh09': 'caoqianhui09@gmail.com',
-  'laocao0931': 'qcao0532@gmail.com',
-};
-
 const SignupPage = () => {
   const [name, setName] = useState('');
   const [wechatId, setWechatId] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phone, setPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  // Generate email from WeChat ID
-  const generateEmailFromWechatId = (wechatId: string): string => {
-    // Check if WeChat ID already has a mapped email
-    const existingEmail = wechatToEmailMapping[wechatId.toLowerCase()];
-    if (existingEmail) {
-      return existingEmail;
-    }
-    
-    // Generate new email format: wechatid@tournament.app
-    return `${wechatId.toLowerCase()}@tournament.app`;
-  };
 
   const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -72,17 +53,14 @@ const SignupPage = () => {
     }
 
     try {
-      // Generate email from WeChat ID
-      const email = generateEmailFromWechatId(wechatId.trim());
-      
-      // Create PocketBase Auth user
-      await auth.signUp(email, password, name.trim());
+      // Create user with WeChat ID directly
+      await auth.signUp(wechatId.trim(), password, name.trim());
 
       console.log('User signed up successfully');
       navigate('/profile');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error signing up:', error);
-      const errorMessage = error.message || '';
+      const errorMessage = (error as Error).message || '';
       
       // Handle specific error messages
       if (errorMessage.includes('已被注册') || errorMessage.includes('already')) {
@@ -150,17 +128,6 @@ const SignupPage = () => {
             onChange={(e) => setWechatId(e.target.value)}
             placeholder="请输入您的微信号"
             helperText="微信号将作为您的登录账号"
-          />
-          <TextField
-            margin="normal"
-            fullWidth
-            id="phone"
-            label="手机号码（可选）"
-            name="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="请输入您的手机号码"
           />
           <TextField
             margin="normal"

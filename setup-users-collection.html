@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 Users 集合字段</title>
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.26.5/dist/pocketbase.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .fields-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .fields-table th,
+        .fields-table td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .fields-table th {
+            background: #667eea;
+            color: white;
+        }
+
+        .fields-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        .code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        ol, ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .step h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👥 Users 集合设置指南</h1>
+
+        <!-- Current Status -->
+        <div class="card">
+            <h2>📊 当前状态</h2>
+            <div class="info-box">
+                <p>✅ PocketBase 正在运行</p>
+                <p>✅ Users 集合已存在（自动创建）</p>
+                <p>⚠️ 需要添加额外字段以支持微信登录</p>
+            </div>
+        </div>
+
+        <!-- Required Fields -->
+        <div class="card">
+            <h2>📝 需要的字段</h2>
+            <p>Users 集合需要以下字段来支持完整的功能：</p>
+
+            <table class="fields-table">
+                <thead>
+                    <tr>
+                        <th>字段名</th>
+                        <th>类型</th>
+                        <th>必填</th>
+                        <th>唯一</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="code">email</code></td>
+                        <td>Text</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>自动创建（邮箱）</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">password</code></td>
+                        <td>Password</td>
+                        <td>✅</td>
+                        <td>❌</td>
+                        <td>自动创建（密码）</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">name</code></td>
+                        <td>Text</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>用户姓名</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">wechatOpenid</code></td>
+                        <td>Text</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>微信 OpenID（可选，用于微信OAuth）</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">wechatUnionid</code></td>
+                        <td>Text</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>微信 UnionID（可选，用于微信OAuth）</td>
+                    </tr>
+                    <tr>
+                        <td><code class="code">avatar</code></td>
+                        <td>URL</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>用户头像 URL</td>
+                    </tr>
+                    <tr>
+                        <td><code class="coe">phone</code></td>
+                        <td>Text</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>手机号码（可选）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box">
+                <strong>📌 注意：</strong>
+                <ul>
+                    <li><code class="code">email</code> 和 <code class="code">password</code> 字段由 PocketBase 自动创建</li>
+                    <li>当前系统只需要 <code class="code">email</code>, <code class="code">password</code>, 和 <code class="code">name</code> 就能工作</li>
+                    <li>微信字段（wechatOpenid, wechatUnionid）是可选的，用于未来的微信 OAuth 登录</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Setup Instructions -->
+        <div class="card">
+            <h2>🛠️ 设置步骤</h2>
+
+            <div class="warning-box">
+                <strong>⚠️ 重要：</strong> 这些步骤是<strong>可选的</strong>！<br>
+                当前系统已经可以正常工作。只有在你需要微信 OAuth 登录时才需要添加这些字段。
+            </div>
+
+            <div class="step">
+                <h3>步骤 1: 打开 PocketBase 管理后台</h3>
+                <button onclick="openAdmin()">🔧 打开管理后台</button>
+                <p>或手动访问: <a href="http://127.0.0.1:8090/_/" target="_blank">http://127.0.0.1:8090/_/</a></p>
+            </div>
+
+            <div class="step">
+                <h3>步骤 2: 选择 Users 集合</h3>
+                <ol>
+                    <li>在左侧菜单中，找到 <strong>Collections</strong></li>
+                    <li>点击 <strong>users</strong> 集合</li>
+                </ol>
+            </div>
+
+            <div class="step">
+                <h3>步骤 3: 添加字段（可选）</h3>
+                
+                <h4>添加 name 字段（如果不存在）：</h4>
+                <ol>
+                    <li>点击 <strong>"Fields"</strong> 标签</li>
+                    <li>点击 <strong>"+ New field"</strong></li>
+                    <li>选择类型: <strong>Text</strong></li>
+                    <li>字段名: <code class="code">name</code></li>
+                    <li>取消勾选 "Required"（不必填）</li>
+                    <li>点击 <strong>"Save"</strong></li>
+                </ol>
+
+                <h4>添加微信字段（可选 - 仅用于微信 OAuth）：</h4>
+                
+                <p><strong>添加 wechatOpenid：</strong></p>
+                <ol>
+                    <li>点击 <strong>"+ New field"</strong></li>
+                    <li>选择类型: <strong>Text</strong></li>
+                    <li>字段名: <code class="code">wechatOpenid</code></li>
+                    <li>取消勾选 "Required"</li>
+                    <li>勾选 <strong>"Unique"</strong> ✅</li>
+                    <li>点击 <strong>"Save"</strong></li>
+                </ol>
+
+                <p><strong>添加 wechatUnionid：</strong></p>
+                <ol>
+                    <li>点击 <strong>"+ New field"</strong></li>
+                    <li>选择类型: <strong>Text</strong></li>
+                    <li>字段名: <code class="code">wechatUnionid</code></li>
+                    <li>取消勾选 "Required"</li>
+                    <li>取消勾选 "Unique"</li>
+                    <li>点击 <strong>"Save"</strong></li>
+                </ol>
+
+                <p><strong>添加 avatar：</strong></p>
+                <ol>
+                    <li>点击 <strong>"+ New field"</strong></li>
+                    <li>选择类型: <strong>URL</strong></li>
+                    <li>字段名: <code class="code">avatar</code></li>
+                    <li>取消勾选 "Required"</li>
+                    <li>点击 <strong>"Save"</strong></li>
+                </ol>
+
+                <p><strong>添加 phone：</strong></p>
+                <ol>
+                    <li>点击 <strong>"+ New field"</strong></li>
+                    <li>选择类型: <strong>Text</strong></li>
+                    <li>字段名: <code class="code">phone</code></li>
+                    <li>取消勾选 "Required"</li>
+                    <li>点击 <strong>"Save"</strong></li>
+                </ol>
+            </div>
+
+            <div class="step">
+                <h3>步骤 4: 检查 API 规则</h3>
+                <ol>
+                    <li>点击 <strong>"API Rules"</strong> 标签</li>
+                    <li>确保以下规则设置正确：</li>
+                </ol>
+                <table class="fields-table">
+                    <thead>
+                        <tr>
+                            <th>规则</th>
+                            <th>建议设置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>List/Search</td>
+                            <td><code class="code">@request.auth.id != ""</code> (仅认证用户)</td>
+                        </tr>
+                        <tr>
+                            <td>View</td>
+                            <td><code class="code">@request.auth.id != ""</code> (仅认证用户)</td>
+                        </tr>
+                        <tr>
+                            <td>Create</td>
+                            <td><code class="code">留空</code> (允许注册)</td>
+                        </tr>
+                        <tr>
+                            <td>Update</td>
+                            <td><code class="code">@request.auth.id = id</code> (仅本人)</td>
+                        </tr>
+                        <tr>
+                            <td>Delete</td>
+                            <td><code class="code">@request.auth.id = id</code> (仅本人)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step">
+                <h3>步骤 5: 保存并测试</h3>
+                <ol>
+                    <li>点击 <strong>"Save changes"</strong> 保存所有修改</li>
+                    <li>打开测试工具验证功能</li>
+                </ol>
+                <button onclick="openTestTool()">🧪 打开测试工具</button>
+            </div>
+        </div>
+
+        <!-- Current Status Check -->
+        <div class="card">
+            <h2>✅ 当前功能状态</h2>
+            <div class="success-box">
+                <h3>已经可以使用的功能：</h3>
+                <ul>
+                    <li>✅ 用户注册（使用微信号生成邮箱）</li>
+                    <li>✅ 用户登录（使用微信号和密码）</li>
+                    <li>✅ 密码认证</li>
+                    <li>✅ 会话管理</li>
+                    <li>✅ 用户资料更新</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h3>需要额外字段才能使用的功能：</h3>
+                <ul>
+                    <li>⏳ 微信 OAuth 登录（需要 wechatOpenid 字段）</li>
+                    <li>⏳ 微信头像同步（需要 avatar 字段）</li>
+                    <li>⏳ 手机号验证（需要 phone 字段）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h2>⚡ 快捷操作</h2>
+            <button onclick="openAdmin()">🔧 打开管理后台</button>
+            <button onclick="openTestTool()" class="secondary">🧪 打开测试工具</button>
+            <button onclick="openFrontend()" class="secondary">🌐 打开前端应用</button>
+        </div>
+
+        <!-- FAQ -->
+        <div class="card">
+            <h2>❓ 常见问题</h2>
+            
+            <h3>Q: 我需要立即添加这些字段吗？</h3>
+            <p><strong>A:</strong> 不需要。当前系统已经可以正常工作。只有在需要微信 OAuth 登录功能时才需要添加 wechatOpenid 和 wechatUnionid 字段。</p>
+
+            <h3>Q: name 字段是必需的吗？</h3>
+            <p><strong>A:</strong> 推荐添加，但不是必需的。注册功能会尝试保存用户姓名到这个字段。如果字段不存在，PocketBase 会忽略它，不影响注册。</p>
+
+            <h3>Q: 如果我不想使用微信 OAuth 怎么办？</h3>
+            <p><strong>A:</strong> 完全可以！当前的系统使用微信号生成邮箱地址进行注册和登录，不需要真正的微信 OAuth。微信字段只是为未来扩展预留的。</p>
+
+            <h3>Q: 我可以稍后再添加这些字段吗？</h3>
+            <p><strong>A:</strong> 可以！PocketBase 支持随时添加新字段，不会影响现有数据。</p>
+
+            <h3>Q: 添加字段后需要重启服务吗？</h3>
+            <p><strong>A:</strong> 不需要。PocketBase 会自动应用架构更改。</p>
+        </div>
+    </div>
+
+    <script>
+        function openAdmin() {
+            window.open('http://127.0.0.1:8090/_/', '_blank');
+        }
+
+        function openTestTool() {
+            window.open('file:///Users/mac/Downloads/bianluns(9.5:10)/test-pocketbase-auth.html', '_blank');
+        }
+
+        function openFrontend() {
+            window.open('http://localhost:5173', '_blank');
+        }
+    </script>
+</body>
+</html>
+

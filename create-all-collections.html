@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建所有集合 - PocketBase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 创建所有集合</h1>
+
+        <div class="card">
+            <h2>说明</h2>
+            <div class="status info">
+                <p><strong>⚠️ 重要提示：</strong></p>
+                <p>PocketBase 的集合只能通过管理界面创建，不能通过 JavaScript API 创建。</p>
+                <p>请按照下面的步骤在管理界面中手动创建集合。</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>第一步：打开管理界面</h2>
+            <button onclick="openAdmin()">🔧 打开 PocketBase 管理界面</button>
+            <p style="margin-top: 10px;">或访问: <a href="http://127.0.0.1:8090/_/" target="_blank">http://127.0.0.1:8090/_/</a></p>
+        </div>
+
+        <div class="card">
+            <h2>第二步：创建 tournaments 集合</h2>
+            <ol style="line-height: 2;">
+                <li>点击左侧 <strong>"Collections"</strong></li>
+                <li>点击 <strong>"+ New collection"</strong></li>
+                <li><strong>Name:</strong> <code>tournaments</code></li>
+                <li><strong>Type:</strong> Base collection</li>
+                <li>点击 <strong>"Create"</strong></li>
+                <li>添加以下字段 (点击 "+ New field"):</li>
+            </ol>
+            
+            <pre>name               - Text (Required ✅)
+title              - Text
+description        - Text
+startDate          - Text
+endDate            - Text
+registrationDeadline - Text
+location           - Text
+type               - Text
+status             - Text
+price              - Number
+organizer          - Text
+contact            - Text
+category           - Text</pre>
+
+            <p><strong>API Rules (重要!):</strong></p>
+            <ul style="line-height: 2;">
+                <li><strong>List/Search:</strong> 留空 (允许所有人查看)</li>
+                <li><strong>View:</strong> 留空</li>
+                <li><strong>Create:</strong> <code>@request.auth.id != ""</code></li>
+                <li><strong>Update:</strong> <code>@request.auth.id != ""</code></li>
+                <li><strong>Delete:</strong> <code>@request.auth.id != ""</code></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>第三步：创建 topics 集合</h2>
+            <ol style="line-height: 2;">
+                <li>点击 <strong>"+ New collection"</strong></li>
+                <li><strong>Name:</strong> <code>topics</code></li>
+                <li><strong>Type:</strong> Base collection</li>
+                <li>点击 <strong>"Create"</strong></li>
+                <li>添加以下字段:</li>
+            </ol>
+            
+            <pre>text               - Text (Required ✅)
+explanation        - Text
+area               - Text
+language           - Text
+tournament         - Text</pre>
+
+            <p><strong>API Rules:</strong></p>
+            <ul style="line-height: 2;">
+                <li><strong>List/Search:</strong> 留空</li>
+                <li><strong>View:</strong> 留空</li>
+                <li><strong>Create:</strong> <code>@request.auth.id != ""</code></li>
+                <li><strong>Update:</strong> <code>@request.auth.id != ""</code></li>
+                <li><strong>Delete:</strong> <code>@request.auth.id != ""</code></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>第四步：创建 timer_projects 集合</h2>
+            <ol style="line-height: 2;">
+                <li>点击 <strong>"+ New collection"</strong></li>
+                <li><strong>Name:</strong> <code>timer_projects</code></li>
+                <li><strong>Type:</strong> Base collection</li>
+                <li>点击 <strong>"Create"</strong></li>
+                <li>添加以下字段:</li>
+            </ol>
+            
+            <pre>name               - Text (Required ✅)
+description        - Text
+type               - Text (Required ✅)
+duration           - Number
+createdBy          - Text (Required ✅)</pre>
+
+            <p><strong>API Rules:</strong></p>
+            <ul style="line-height: 2;">
+                <li><strong>List/Search:</strong> 留空</li>
+                <li><strong>View:</strong> 留空</li>
+                <li><strong>Create:</strong> <code>@request.auth.id != ""</code></li>
+                <li><strong>Update:</strong> <code>@request.auth.id != ""</code></li>
+                <li><strong>Delete:</strong> <code>@request.auth.id != ""</code></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>第五步：验证集合</h2>
+            <button onclick="checkCollections()">✅ 检查所有集合</button>
+            <div id="result"></div>
+        </div>
+
+        <div class="card">
+            <h2>第六步：刷新应用</h2>
+            <p>创建完所有集合后，刷新您的应用页面：</p>
+            <button onclick="refreshApp()">🔄 刷新应用</button>
+        </div>
+    </div>
+
+    <script>
+        const POCKETBASE_URL = 'http://127.0.0.1:8090';
+
+        function openAdmin() {
+            window.open(`${POCKETBASE_URL}/_/`, '_blank');
+        }
+
+        function refreshApp() {
+            window.open('http://localhost:5173', '_blank');
+        }
+
+        async function checkCollections() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="status info"><span class="loading"></span> 检查中...</div>';
+
+            const collections = ['users', 'tournaments', 'topics', 'timer_projects'];
+            let results = '';
+
+            for (const collection of collections) {
+                try {
+                    const response = await fetch(`${POCKETBASE_URL}/api/collections/${collection}/records?perPage=1`);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        results += `
+                            <div class="status success">
+                                ✅ <strong>${collection}</strong> 集合存在 (${data.totalItems || 0} 条记录)
+                            </div>
+                        `;
+                    } else {
+                        results += `
+                            <div class="status error">
+                                ❌ <strong>${collection}</strong> 集合不存在 - 请创建它
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    results += `
+                        <div class="status error">
+                            ❌ <strong>${collection}</strong> 检查失败: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+
+            resultDiv.innerHTML = results;
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            setTimeout(checkCollections, 500);
+        });
+    </script>
+</body>
+</html>
+
