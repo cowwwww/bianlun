@@ -83,16 +83,18 @@ const SignupPage = () => {
     } catch (error: any) {
       console.error('Error signing up:', error);
       const errorMessage = error.message || '';
-      if (errorMessage.includes('already exists')) {
-        setError('该微信号已被注册');
-      } else if (errorMessage.includes('invalid')) {
-        setError('微信号格式无效');
-      } else if (errorMessage.includes('password')) {
-        setError('密码强度太弱');
+      
+      // Handle specific error messages
+      if (errorMessage.includes('已被注册') || errorMessage.includes('already')) {
+        setError('该微信号已被注册，请直接登录或使用其他微信号');
+      } else if (errorMessage.includes('格式无效') || errorMessage.includes('invalid')) {
+        setError('微信号格式无效，请检查后重试');
+      } else if (errorMessage.includes('密码') || errorMessage.includes('password')) {
+        setError('密码不符合要求，请使用至少6位字符');
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        setError('网络连接失败，请检查网络');
+        setError('网络连接失败，请检查网络后重试');
       } else {
-        setError('注册失败: ' + (error.message || '发生未知错误，请稍后重试'));
+        setError(errorMessage || '注册失败，请稍后重试');
       }
     } finally {
       setLoading(false);

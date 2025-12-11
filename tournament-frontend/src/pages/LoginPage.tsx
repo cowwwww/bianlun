@@ -12,7 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/authService';
 import { loginWithWeChat } from '../services/wechatAuthService';
 
-// WeChat ID to Email mapping
+// WeChat ID to Email mapping for existing users (legacy support)
 const wechatToEmailMapping: { [key: string]: string } = {
   'cqhcqh09': 'caoqianhui09@gmail.com',
   'laocao0931': 'qcao0532@gmail.com',
@@ -25,25 +25,48 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Generate email from WeChat ID (same logic as signup)
+  const generateEmailFromWechatId = (wechatId: string): string => {
+    // Check if WeChat ID already has a mapped email (legacy users)
+    const existingEmail = wechatToEmailMapping[wechatId.toLowerCase()];
+    if (existingEmail) {
+      return existingEmail;
+    }
+    
+    // Generate new email format: wechatid@tournament.app
+    return `${wechatId.toLowerCase()}@tournament.app`;
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      // Convert WeChat ID to email
-      const email = wechatToEmailMapping[wechatId.toLowerCase()];
-      if (!email) {
-        setError('微信号不存在，请检查微信号或先注册');
+      // Validate WeChat ID
+      if (!wechatId?.trim()) {
+        setError('请输入微信号');
         setLoading(false);
         return;
       }
+
+      // Convert WeChat ID to email
+      const email = generateEmailFromWechatId(wechatId.trim());
 
       await auth.signIn(email, password);
       navigate('/');
     } catch (error: any) {
       console.error('Error signing in:', error);
-      setError(error.message || '登录失败，请重试');
+      const errorMessage = error.message || '';
+      
+      // Provide helpful error messages
+      if (errorMessage.includes('Invalid login credentials')) {
+        setError('微信号或密码错误，请检查后重试');
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        setError('网络连接失败，请检查网络后重试');
+      } else {
+        setError(errorMessage || '登录失败，请重试');
+      }
     } finally {
       setLoading(false);
     }

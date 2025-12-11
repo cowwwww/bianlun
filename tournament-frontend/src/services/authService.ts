@@ -37,7 +37,7 @@ class AuthService {
       displayName: model.name || model.username || model.email,
       name: model.name,
       avatar: model.avatar,
-      subscriptionType: model.subscriptionType || 'free'
+      subscriptionType: 'free' // Default to free as subscriptionType doesn't exist in PocketBase
     };
   }
 
@@ -67,7 +67,7 @@ class AuthService {
         displayName: authData.record.name || authData.record.username || authData.record.email,
         name: authData.record.name,
         avatar: authData.record.avatar,
-        subscriptionType: authData.record.subscriptionType || 'free'
+        subscriptionType: 'free' // Default to free as subscriptionType doesn't exist in PocketBase
       };
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -77,13 +77,12 @@ class AuthService {
 
   async signUp(email: string, password: string, displayName?: string): Promise<User> {
     try {
-      // Create user
+      // Create user - don't send subscriptionType as it doesn't exist in PocketBase schema
       const user = await pb.collection('users').create({
         email,
         password,
         passwordConfirm: password,
-        name: displayName || email.split('@')[0],
-        subscriptionType: 'free'
+        name: displayName || email.split('@')[0]
       });
 
       // Auto sign in after signup
@@ -95,11 +94,29 @@ class AuthService {
         displayName: authData.record.name || authData.record.username || authData.record.email,
         name: authData.record.name,
         avatar: authData.record.avatar,
-        subscriptionType: authData.record.subscriptionType || 'free'
+        subscriptionType: 'free' // Default to free for all users
       };
     } catch (error: any) {
       console.error('Sign up error:', error);
-      throw new Error(error.message || 'Failed to sign up');
+      
+      // Parse PocketBase error response
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        
+        // Check for email validation errors
+        if (errorData.email) {
+          if (errorData.email.code === 'validation_invalid_email') {
+            throw new Error('该邮箱已被注册或格式无效');
+          }
+        }
+        
+        // Check for password validation errors
+        if (errorData.password) {
+          throw new Error('密码不符合要求');
+        }
+      }
+      
+      throw new Error(error.message || '注册失败，请稍后重试');
     }
   }
 
