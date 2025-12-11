@@ -1,0 +1,9 @@
+name = "bianluns"
+compatibility_date = "2025-12-11"
+
+[site]
+bucket = "./dist"
+
+# Pages configuration
+pages_build_output_dir = "./dist"
+

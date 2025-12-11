@@ -1,0 +1,14 @@
+{
+  "name": "bianluns",
+  "production_branch": "main",
+  "build": {
+    "command": "cd tournament-frontend && npm install --legacy-peer-deps && npm run build",
+    "destination_dir": "tournament-frontend/dist",
+    "root_dir": "/",
+    "environment_variables": {
+      "NODE_VERSION": "18",
+      "VITE_POCKETBASE_URL": "https://bianluns-api.up.railway.app"
+    }
+  }
+}
+
