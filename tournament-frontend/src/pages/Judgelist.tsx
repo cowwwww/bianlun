@@ -35,14 +35,14 @@ import { auth } from '../services/authService';
 interface Judge {
   id: string;
   fullName: string;
-  experience: string;
-  expertise: string[];
-  price: number;
-  contactMessage: string;
-  email: string;
-  phone: string;
-  createdAt: Date;
-  status: 'pending' | 'approved' | 'rejected';
+  experience?: string;
+  expertise?: string[];
+  price?: number;
+  contactMessage?: string;
+  email?: string;
+  phone?: string;
+  createdAt?: Date;
+  status?: 'pending' | 'approved' | 'rejected';
   rating?: number;
   totalReviews?: number;
   location?: string;
@@ -52,7 +52,7 @@ interface Judge {
   bio?: string;
   avatar?: string;
   specialties?: string[];
-  showContactInfo: boolean;
+  showContactInfo?: boolean;
   judgeTypes?: string[];
 }
 
@@ -152,15 +152,26 @@ const JudgeList: React.FC = () => {
       const querySnapshot = await pb.collection('judges').getFullList({ sort: '-created' });
       const loadedJudges: Judge[] = querySnapshot.map((doc) => ({
         id: doc.id,
-        ...doc,
         fullName: doc.fullName || 'Unknown Judge',
+        experience: doc.experience || '',
+        expertise: doc.expertise || [],
+        price: doc.price ?? 0,
+        contactMessage: doc.contactMessage || '',
+        email: doc.email || '',
+        phone: doc.phone || '',
+        createdAt: doc.created ? new Date(doc.created) : undefined,
+        status: (doc.status as Judge['status']) || 'pending',
+        rating: doc.rating ?? 0,
+        totalReviews: doc.totalReviews ?? 0,
         location: doc.location || '北京',
         languages: doc.languages || ['中文', 'English'],
+        education: doc.education || '',
+        certifications: doc.certifications || [],
+        bio: doc.bio || '',
         specialties: doc.specialties || ['辩论赛', '演讲'],
-        price: doc.price || 0,
-        showContactInfo: doc.showContactInfo || false,
+        showContactInfo: !!doc.showContactInfo,
         judgeTypes: doc.judgeTypes || [],
-      } as Judge));
+      }));
       setJudges(loadedJudges);
     } catch (err) {
       console.error("Error loading judges: ", err);

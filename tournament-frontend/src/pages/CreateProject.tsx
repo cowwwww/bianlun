@@ -208,6 +208,7 @@ const CreateProject: React.FC = () => {
         const tempId = `temp-${uuidv4()}`;
         const tempProject: ProjectFormData & { id: string } = {
           ...projectData,
+          projectName: formData.projectName,
           id: tempId,
         };
         navigate(`/run-timer/${tempId}`, { state: { project: tempProject, isTemp: true } });
