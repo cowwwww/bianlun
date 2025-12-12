@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postbuild": "rm -f dist/sounds/before1.MP4 dist/sounds/after2.MP4 || true",
     "lint": "eslint .",
     "preview": "vite preview",
     "migrate-timer-steps": "ts-node src/scripts/migrate-timer-steps.ts"

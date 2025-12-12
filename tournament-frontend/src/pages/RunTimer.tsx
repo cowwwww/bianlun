@@ -1712,13 +1712,35 @@ const RunTimer = () => {
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', mb: 2 }}>
               <Typography variant="body2" sx={{ color: textColor }}>赛前音乐/赛后音乐：</Typography>
-              <Button variant="outlined" size="small" onClick={() => playTrack(before1Ref, encodeURI('/sounds/before1.MP4'))}>赛前音乐1 播放</Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() =>
+                  playTrack(
+                    before1Ref,
+                    'https://media.githubusercontent.com/media/cowwwww/bianlun/main/tournament-frontend/public/sounds/before1.MP4?raw=1'
+                  )
+                }
+              >
+                赛前音乐1 播放
+              </Button>
               <Button variant="outlined" size="small" onClick={() => pauseTrack(before1Ref)}>暂停</Button>
               <Button variant="outlined" size="small" onClick={() => playTrack(before2Ref, encodeURI('/sounds/before2.wav'))}>赛前音乐2 播放</Button>
               <Button variant="outlined" size="small" onClick={() => pauseTrack(before2Ref)}>暂停</Button>
               <Button variant="outlined" size="small" onClick={() => playTrack(after1Ref, encodeURI('/sounds/after1.wav'))}>赛后音乐1 播放</Button>
               <Button variant="outlined" size="small" onClick={() => pauseTrack(after1Ref)}>暂停</Button>
-              <Button variant="outlined" size="small" onClick={() => playTrack(after2Ref, encodeURI('/sounds/after2.MP4'))}>赛后音乐2 播放</Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() =>
+                  playTrack(
+                    after2Ref,
+                    'https://media.githubusercontent.com/media/cowwwww/bianlun/main/tournament-frontend/public/sounds/after2.MP4?raw=1'
+                  )
+                }
+              >
+                赛后音乐2 播放
+              </Button>
               <Button variant="outlined" size="small" onClick={() => pauseTrack(after2Ref)}>暂停</Button>
             </Box>
 
