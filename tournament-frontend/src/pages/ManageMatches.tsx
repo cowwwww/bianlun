@@ -279,16 +279,16 @@ const ManageMatches: React.FC = () => {
                       <MenuItem value="">
                         <em>选择队员</em>
                       </MenuItem>
-                      {teamMembers
+                {teamMembers
                         .filter(m => m.registrationId === selectedSideA.id)
-                        .map(member => (
+                  .map(member => (
                           <MenuItem key={member.id} value={member.name}>
                             {member.name} ({member.school || '未知学校'}) - {member.role === 'leader' ? '领队' : member.role === 'accompanying_judge' ? '随评' : '队员'}
                           </MenuItem>
                         ))}
                     </Select>
                   </Box>
-                ))}
+                  ))}
               </Box>
             )}
           </Grid>
@@ -331,16 +331,16 @@ const ManageMatches: React.FC = () => {
                       <MenuItem value="">
                         <em>选择队员</em>
                       </MenuItem>
-                      {teamMembers
+                {teamMembers
                         .filter(m => m.registrationId === selectedSideB.id)
-                        .map(member => (
+                  .map(member => (
                           <MenuItem key={member.id} value={member.name}>
                             {member.name} ({member.school || '未知学校'}) - {member.role === 'leader' ? '领队' : member.role === 'accompanying_judge' ? '随评' : '队员'}
                           </MenuItem>
                         ))}
                     </Select>
                   </Box>
-                ))}
+                  ))}
               </Box>
             )}
           </Grid>

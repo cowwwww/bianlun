@@ -6,8 +6,7 @@
     "destination_dir": "tournament-frontend/dist",
     "root_dir": "/",
     "environment_variables": {
-      "NODE_VERSION": "18",
-      "VITE_POCKETBASE_URL": "https://bianluns-api.up.railway.app"
+      "NODE_VERSION": "18"
     }
   }
 }

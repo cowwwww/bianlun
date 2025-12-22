@@ -56,7 +56,7 @@ const LoginPage = () => {
     } catch (error) {
       console.error('Error signing in:', error);
       const errorMessage = (error as Error).message || '';
-
+      
       // Provide helpful error messages in Chinese
       if (errorMessage.includes('Invalid credentials') || errorMessage.includes('Invalid login')) {
         setError('微信号或密码错误，请检查后重试');
@@ -169,50 +169,50 @@ const LoginPage = () => {
               </Typography>
 
               <Box component="form" onSubmit={handleSubmit} noValidate>
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="wechatId"
-                  label="微信号 *"
-                  name="wechatId"
-                  autoComplete="username"
-                  autoFocus
-                  value={wechatId}
-                  onChange={(e) => setWechatId(e.target.value)}
-                  error={!!error}
-                  placeholder="请输入您的微信号"
-                />
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  name="password"
-                  label="密码 *"
-                  type="password"
-                  id="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  error={!!error}
-                  helperText={error}
-                />
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="wechatId"
+            label="微信号 *"
+            name="wechatId"
+            autoComplete="username"
+            autoFocus
+            value={wechatId}
+            onChange={(e) => setWechatId(e.target.value)}
+            error={!!error}
+            placeholder="请输入您的微信号"
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="密码 *"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={!!error}
+            helperText={error}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
                   sx={{ mt: 3, mb: 2, py: 1.5 }}
-                  disabled={loading}
-                >
-                  {loading ? <CircularProgress size={24} color="inherit" /> : '登录'}
-                </Button>
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : '登录'}
+          </Button>
               </Box>
 
-              <Typography variant="body2" align="center">
+          <Typography variant="body2" align="center">
                 <Link to="/signup" style={{ textDecoration: 'none' }}>
-                  {"还没有账号？立即注册"}
-                </Link>
-              </Typography>
+              {"还没有账号？立即注册"}
+            </Link>
+          </Typography>
             </CardContent>
           </Card>
         </Box>

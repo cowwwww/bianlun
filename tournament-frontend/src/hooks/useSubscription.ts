@@ -33,7 +33,7 @@ export const useSubscription = () => {
     try {
       setLoading(true);
       const currentUser = auth.getCurrentUser();
-
+      
       if (!currentUser) {
         setSubscription(null);
         return;
@@ -110,12 +110,12 @@ export const useSubscription = () => {
 
     // TODO: Implement when subscriptions API is available
     // For now, just update local state
-    setSubscription(prev => prev ? {
-      ...prev,
-      freeDownloadTokens: Math.max(0, (prev.freeDownloadTokens || 0) - 1)
-    } : null);
-
-    return true;
+      setSubscription(prev => prev ? {
+        ...prev,
+        freeDownloadTokens: Math.max(0, (prev.freeDownloadTokens || 0) - 1)
+      } : null);
+      
+      return true;
   };
 
   const incrementAiUsage = async () => {
@@ -123,11 +123,11 @@ export const useSubscription = () => {
 
     // TODO: Implement when subscriptions API is available
     // For now, just update local state
-    setSubscription(prev => prev ? {
-      ...prev,
-      aiUsageCount: prev.aiUsageCount + 1
-    } : null);
-    return true;
+      setSubscription(prev => prev ? {
+        ...prev,
+        aiUsageCount: prev.aiUsageCount + 1
+      } : null);
+      return true;
   };
 
   useEffect(() => {

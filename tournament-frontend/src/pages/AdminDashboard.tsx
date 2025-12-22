@@ -699,8 +699,8 @@ const AdminDashboard: React.FC = () => {
             <FormControl fullWidth size="small">
               <InputLabel>选择赛事</InputLabel>
               <Select
-                value={tournamentId}
-                onChange={(e) => setTournamentId(e.target.value)}
+              value={tournamentId}
+              onChange={(e) => setTournamentId(e.target.value)}
                 label="选择赛事"
               >
                 {tournaments.map((tournament) => (

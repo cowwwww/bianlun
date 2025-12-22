@@ -1,7 +1,10 @@
-# Don't include pb_data in Docker image (use volume instead)
-pb_data/
+# Keep pb_data for Vercel deployment (needed for collections and data)
+# pb_data/  # Commented out for Vercel - we need the data
 *.log
 .DS_Store
+.git/
+node_modules/
+pb_data_backup.tar.gz
 
 
 
