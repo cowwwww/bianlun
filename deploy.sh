@@ -60,3 +60,5 @@ echo "   curl https://${DOMAIN}"
 echo "   curl https://api.${DOMAIN}/api/health"
 echo ""
 
+
+

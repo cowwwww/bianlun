@@ -60,3 +60,5 @@ echo ""
 echo "All files processed! Backups created with .bak extension"
 echo "If everything works, you can remove backups with: find $FRONTEND_DIR -name '*.bak' -delete"
 
+
+

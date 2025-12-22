@@ -41,6 +41,7 @@
     <button onclick="setupAdmin()">1. Setup Admin Account</button>
     <button onclick="createCollections()">2. Create Collections</button>
     <button onclick="addSampleData()">3. Add Sample Tournaments</button>
+    <button onclick="importCSVData()">4. Import CSV Registrations</button>
     
     <script>
         const pb = new PocketBase('http://127.0.0.1:8090');
@@ -166,7 +167,44 @@
                 showStatus('❌ Error: ' + error.message + '<br>Make sure you created the collections first!', 'error');
             }
         }
+
+        async function importCSVData() {
+            try {
+                showStatus('Creating registrations...', 'info');
+
+                // Create first registration
+                const reg1 = await pb.collection('registrations').create({
+                    tournamentId: '5zrkihweutfv72k',
+                    teamName: '橙子酱队',
+                    participants: ['冯文静', '叶宇亮', '施少坦', '罗涵玥', '蔡悦晨', '游柔婧', '余美琪'],
+                    status: 'approved',
+                    paymentStatus: 'paid'
+                });
+
+                // Create second registration
+                const reg2 = await pb.collection('registrations').create({
+                    tournamentId: '5zrkihweutfv72k',
+                    teamName: '显允—啊！打～',
+                    participants: ['黄华', '刘畅', '吴昊森', '翁一凡', '张睿', '金瀚博', '张月', '王腾鑫', '江俊蕾', '吴欣虹', '廖梓杰', '李东升'],
+                    status: 'approved',
+                    paymentStatus: 'paid'
+                });
+
+                showStatus('Updating match with correct team IDs...', 'info');
+
+                // Update the match to use the correct registration IDs
+                await pb.collection('matches').update('b826pfztf2ime4p', {
+                    sideAId: reg1.id,
+                    sideBId: reg2.id
+                });
+
+                showStatus(`✅ Successfully created registrations and updated match! Team 1: ${reg1.teamName} (${reg1.id}), Team 2: ${reg2.teamName} (${reg2.id}). Refresh your tournament page to see them.`, 'success');
+            } catch (error) {
+                showStatus('❌ Error importing CSV data: ' + error.message, 'error');
+            }
+        }
     </script>
 </body>
 </html>
+
 

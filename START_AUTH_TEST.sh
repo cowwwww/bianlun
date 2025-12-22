@@ -91,3 +91,5 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     open "file:///Users/mac/Downloads/bianluns(9.5:10)/test-pocketbase-auth.html"
 fi
 
+
+

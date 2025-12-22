@@ -1,36 +1,33 @@
-import { useEffect } from 'react';
+import React from 'react';
+import { Container, Typography, Paper, Box, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Container, Box, Typography, Paper, Button } from '@mui/material';
-import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 
-const PaymentSuccessPage = () => {
+const PaymentSuccessPage: React.FC = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Payment success logic would go here
-    // For now, this is a placeholder
-  }, []);
-
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
-        <CheckCircleIcon sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
-        <Typography variant="h4" gutterBottom>
-          支付成功！
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+          支付成功
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          感谢您的购买，您的会员已激活。
+        <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+          感谢您的支持！如有疑问请联系管理员确认订单。
         </Typography>
-        <Button 
-          variant="contained" 
-          size="large"
-          onClick={() => navigate('/profile')}
-        >
-          返回个人中心
-        </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
+          <Button variant="contained" onClick={() => navigate('/resources')}>
+            去资源库
+          </Button>
+          <Button variant="outlined" onClick={() => navigate('/profile')}>
+            查看账户
+          </Button>
+        </Box>
       </Paper>
     </Container>
   );
 };
 
 export default PaymentSuccessPage;
+
+
+

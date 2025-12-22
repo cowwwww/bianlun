@@ -74,6 +74,7 @@ const TopicList = () => {
   // 赛事类型
   const tournaments = [
     { value: '', label: '全部赛事', icon: '🏆' },
+    { value: 'ada-debate', label: 'ADA辩论赛', icon: '🎭' },
     { value: 'xinguobian', label: '新国辩', icon: '🎯' },
     { value: 'huayu-worldcup', label: '华语辩论世界杯', icon: '🏆' },
     { value: 'parliamentary', label: '议会制辩论', icon: '🏛️' },

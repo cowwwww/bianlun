@@ -161,3 +161,5 @@ echo -e "   • 前端应用: ${BLUE}http://localhost:5173${NC}"
 echo -e "   • 测试工具: ${BLUE}open test-signup-after-fix.html${NC}"
 echo ""
 
+
+

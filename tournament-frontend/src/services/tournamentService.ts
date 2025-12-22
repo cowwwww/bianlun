@@ -27,15 +27,26 @@ export type Tournament = {
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
+  scoringConfig?: Array<{ key: string; label: string; max: number; weight?: number }>;
 };
+
+const staticTournaments: Tournament[] = [
+];
+
+const sortByDateDesc = (items: Tournament[]) =>
+  [...items].sort((a, b) => {
+    const aTime = new Date(a.startDate || a.date || a.createdAt || 0).getTime();
+    const bTime = new Date(b.startDate || b.date || b.createdAt || 0).getTime();
+    return bTime - aTime;
+  });
 
 export const getTournaments = async (): Promise<Tournament[]> => {
   try {
     const records = await pb.collection('tournaments').getFullList({
       sort: '-created',
     });
-    
-    return records.map(record => ({
+
+    const mapped = records.map(record => ({
       id: record.id,
       name: record.name || record.title || '',
       title: record.title || record.name || '',
@@ -62,14 +73,29 @@ export const getTournaments = async (): Promise<Tournament[]> => {
       createdAt: record.created || '',
       updatedAt: record.updated || '',
       createdBy: record.createdBy || '',
+      scoringConfig: record.scoringConfig || record.scoring || [],
     }));
+
+    // Merge static tournaments (for environments where PocketBase seeding is unavailable)
+    const merged = [
+      ...staticTournaments.filter(
+        (staticT) => !mapped.some((t) => t.id === staticT.id || t.title === staticT.title)
+      ),
+      ...mapped,
+    ];
+
+    return sortByDateDesc(merged);
   } catch (error) {
     console.error('Error fetching tournaments:', error);
-    return [];
+    // Fallback to static data on failure
+    return sortByDateDesc(staticTournaments);
   }
 };
 
 export const getTournamentById = async (id: string): Promise<Tournament | null> => {
+  const staticMatch = staticTournaments.find((t) => t.id === id);
+  if (staticMatch) return staticMatch;
+
   try {
     const record = await pb.collection('tournaments').getOne(id);
     

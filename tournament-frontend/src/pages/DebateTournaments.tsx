@@ -14,9 +14,12 @@ import {
   Chip,
   Stack,
   Container,
+  Divider,
+  Button,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getTournaments, type Tournament } from '../services/tournamentService';
+import { getFinishedTournaments, type FinishedTournament } from '../services/finishedTournaments';
 
 // Enhanced fuzzy match function for better search results
 const fuzzyMatch = (text: string, query: string): boolean => {
@@ -48,6 +51,7 @@ const DebateTournaments = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [finishedTournaments, setFinishedTournaments] = useState<FinishedTournament[]>([]);
 
   useEffect(() => {
     const fetchTournaments = async () => {
@@ -57,6 +61,7 @@ const DebateTournaments = () => {
         const debateTournaments = data.filter(t => t.type === 'Debate');
         setTournaments(debateTournaments);
         setLoading(false);
+        setFinishedTournaments(getFinishedTournaments());
       } catch (err) {
         setError('Failed to fetch debate tournaments.');
         setLoading(false);
@@ -186,6 +191,49 @@ const DebateTournaments = () => {
               </Grid>
             ))
           )}
+        </Grid>
+
+        <Divider sx={{ my: 5 }} />
+
+        <Typography variant="h5" gutterBottom>
+          往期辩论赛事赛果
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          这些赛果来自 ArcX 站点的历史赛事。
+        </Typography>
+        <Grid container spacing={3}>
+          {finishedTournaments.map((item) => (
+            <Grid item xs={12} md={6} lg={3} key={item.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {item.image && (
+                  <CardMedia component="img" height="140" image={item.image} alt={item.title} />
+                )}
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                    {item.tag && <Chip label={item.tag} size="small" color="primary" />}
+                    {item.year && <Chip label={item.year} size="small" />}
+                  </Stack>
+                  <Typography variant="subtitle1" gutterBottom>
+                    {item.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {item.description}
+                  </Typography>
+                </CardContent>
+                <Box sx={{ px: 2, pb: 2 }}>
+                  <Button size="small" href={item.link} target="_blank" rel="noreferrer">
+                    查看赛果
+                  </Button>
+                </Box>
+              </Card>
+            </Grid>
+          ))}
         </Grid>
       </Box>
     </Container>

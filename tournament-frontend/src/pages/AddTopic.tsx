@@ -58,6 +58,7 @@ const AddTopic = () => {
 
   // 赛事类型
   const tournaments = [
+    { value: 'ada-debate', label: 'ADA辩论赛' },
     { value: 'xinguobian', label: '新国辩' },
     { value: 'huayu-worldcup', label: '华语辩论世界杯' },
     { value: 'parliamentary', label: '议会制辩论' },
@@ -110,9 +111,8 @@ const AddTopic = () => {
         area: formData.area,
         language: formData.language,
         tournament: formData.tournament,
-        ratings: {},
+        ratings: null,
         averageRating: 0,
-        createdAt: new Date().toISOString(),
       };
       
       await addTopic(newTopic);

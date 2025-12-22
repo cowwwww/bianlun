@@ -21,11 +21,18 @@ import JudgeList from './pages/Judgelist';
 import JudgeDetail from './pages/JudgeDetail';
 import TopicList from './pages/TopicList';
 import AddTopic from './pages/AddTopic';
+import RegisterTournament from './pages/RegisterTournament';
+import MatchScorePage from './pages/MatchScorePage';
+import MyMatches from './pages/MyMatches';
+import ManageMatches from './pages/ManageMatches';
 import TimerIntroduction from './pages/TimerIntroduction';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import TournamentOrganizer from './pages/TournamentOrganizer';
 import WeChatLogin from './pages/WeChatLogin';
 import WeChatCallback from './pages/WeChatCallback';
+import TournamentBracket from './pages/TournamentBracket';
+import RegistrationManagement from './pages/RegistrationManagement';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -36,7 +43,15 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/tournaments/:id" element={<TournamentDetail />} />
+            <Route path="/tournaments/:id/register" element={<RegisterTournament />} />
             <Route path="/create-tournament" element={<CreateTournament />} />
+            <Route path="/matches/:matchId/score" element={<MatchScorePage />} />
+            <Route path="/my-matches" element={<MyMatches />} />
+            <Route path="/tournaments/:id/manage-matches" element={<ManageMatches />} />
+            <Route path="/organizer/tournaments/:id/registrations" element={<RegistrationManagement />} />
+            <Route path="/organizer/tournaments/:id/bracket" element={<TournamentBracket />} />
+            <Route path="/registration-management" element={<RegistrationManagement />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/tournaments/mun" element={<MUNTournaments />} />
             <Route path="/tournaments/hackathon" element={<HackathonTournaments />} />

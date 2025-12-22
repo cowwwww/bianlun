@@ -33,15 +33,22 @@ export const useSubscription = () => {
     try {
       setLoading(true);
       const currentUser = auth.getCurrentUser();
-      
+
       if (!currentUser) {
         setSubscription(null);
         return;
       }
 
-      // Fetch subscription from API
-      const response = await api.get('/subscriptions/me');
-      setSubscription(response.data);
+      // For now, use default free subscription since subscriptions API is not implemented
+      // TODO: Implement subscriptions collection and API endpoints
+      setSubscription({
+        type: 'free',
+        status: 'active',
+        aiUsageCount: 0,
+        aiUsageLimit: 5,
+        hasUploadAccess: false,
+        freeDownloadTokens: 0,
+      });
     } catch (err) {
       console.error('Error loading subscription:', err);
       setError('Failed to load subscription information');
@@ -101,36 +108,26 @@ export const useSubscription = () => {
   const useFreeDownloadToken = async () => {
     if (!subscription || !auth.getCurrentUser() || (subscription.freeDownloadTokens || 0) <= 0) return false;
 
-    try {
-      await api.post('/subscriptions/use-token');
-      
-      setSubscription(prev => prev ? {
-        ...prev,
-        freeDownloadTokens: Math.max(0, (prev.freeDownloadTokens || 0) - 1)
-      } : null);
-      
-      return true;
-    } catch (error) {
-      console.error('Error using free download token:', error);
-      return false;
-    }
+    // TODO: Implement when subscriptions API is available
+    // For now, just update local state
+    setSubscription(prev => prev ? {
+      ...prev,
+      freeDownloadTokens: Math.max(0, (prev.freeDownloadTokens || 0) - 1)
+    } : null);
+
+    return true;
   };
 
   const incrementAiUsage = async () => {
     if (!subscription || !auth.getCurrentUser()) return false;
 
-    try {
-      await api.post('/subscriptions/increment-ai-usage');
-      
-      setSubscription(prev => prev ? {
-        ...prev,
-        aiUsageCount: prev.aiUsageCount + 1
-      } : null);
-      return true;
-    } catch (error) {
-      console.error('Error incrementing AI usage:', error);
-      return false;
-    }
+    // TODO: Implement when subscriptions API is available
+    // For now, just update local state
+    setSubscription(prev => prev ? {
+      ...prev,
+      aiUsageCount: prev.aiUsageCount + 1
+    } : null);
+    return true;
   };
 
   useEffect(() => {
