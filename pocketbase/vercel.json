@@ -11,8 +11,5 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "env": {
-    "PB_ENCRYPTION_KEY": "@pb_encryption_key"
-  }
+  ]
 }
