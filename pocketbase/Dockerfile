@@ -21,18 +21,16 @@ RUN wget https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSIO
     && rm pocketbase_${PB_VERSION}_linux_amd64.zip
 
 # Create data directory
-RUN mkdir -p /pb_data /pb_migrations /pb_hooks
+RUN mkdir -p /pb_data
 
-# Copy local pb_data (includes admin account, collections, and data)
+# Copy local database and migrations (includes all collections and data)
 COPY pb_data/ /pb_data/
-
-# Copy migrations and hooks
 COPY pb_migrations/ /pb_migrations/
 COPY pb_hooks/ /pb_hooks/
 
-# Create a startup script that runs migrations first
+# Create a startup script
 RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'echo "Starting PocketBase..."' >> /start.sh && \
+    echo 'echo "Starting PocketBase with data..."' >> /start.sh && \
     echo 'exec /usr/local/bin/pocketbase serve --http=0.0.0.0:8090 --dir=/pb_data --migrationsDir=/pb_migrations --hooksDir=/pb_hooks' >> /start.sh && \
     chmod +x /start.sh
 
