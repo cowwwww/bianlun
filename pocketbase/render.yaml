@@ -10,8 +10,4 @@ services:
       - key: PORT
         value: 8090
     healthCheckPath: /api/health
-    disk:
-      name: pb_data
-      mountPath: /pb_data
-      sizeGB: 1
 
