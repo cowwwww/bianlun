@@ -1,10 +1,13 @@
-# Keep pb_data for Vercel deployment (needed for collections and data)
-# pb_data/  # Commented out for Vercel - we need the data
+# Keep pb_data for deployment (needed for collections and data)
+# NOTE: We include pb_data to have all collections pre-configured
 *.log
 .DS_Store
 .git/
 node_modules/
 pb_data_backup.tar.gz
+pb_data/logs.db
+pb_data/logs.db-shm
+pb_data/logs.db-wal
 
 
 
