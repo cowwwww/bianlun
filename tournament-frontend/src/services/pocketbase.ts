@@ -4,7 +4,7 @@ import PocketBase from 'pocketbase';
 // NOTE: For local development, set VITE_POCKETBASE_URL=http://127.0.0.1:8090
 const POCKETBASE_URL =
   (import.meta.env.VITE_POCKETBASE_URL as string | undefined)?.trim() ||
-  'https://bianlun-production.up.railway.app'; // Railway deployment
+  'https://pocketbase-railway-production-d9aa.up.railway.app'; // Railway deployment (new)
 
 // Initialize PocketBase client
 const pb = new PocketBase(POCKETBASE_URL);
