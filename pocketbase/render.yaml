@@ -10,4 +10,3 @@ services:
       - key: PORT
         value: 8090
     healthCheckPath: /api/health
-
