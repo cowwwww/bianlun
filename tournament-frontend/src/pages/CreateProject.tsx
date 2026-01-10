@@ -27,7 +27,6 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import pb from '../services/pocketbase';
-import { auth } from '../services/authService';
 import logo from '../assets/logo.png';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -169,13 +168,6 @@ const CreateProject: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const currentUser = auth.getCurrentUser();
-      if (!currentUser) {
-        setError('请先登录');
-        setLoading(false);
-        return;
-      }
 
       const timerSteps = formData.timerSteps.map(step => ({
         ...step,
@@ -194,11 +186,11 @@ const CreateProject: React.FC = () => {
         isPublic: formData.isPublic,
         timerSteps,
         backgroundImage: formData.backgroundImage,
-        author: currentUser.id,
+        author: 'anonymous',
         usageCount: 0,
         type: 'countdown',
         duration: totalDuration,
-        createdBy: currentUser.id,
+        createdBy: '',
       };
 
       if (formData.isPublic) {
