@@ -1,0 +1,4 @@
+# Ignore pocketbase folder when deploying to Vercel
+# PocketBase should be deployed to Railway, not Vercel
+pocketbase/
+

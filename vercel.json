@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "buildCommand": "cd tournament-frontend && npm install && npm run build",
+  "outputDirectory": "tournament-frontend/dist",
+  "installCommand": "cd tournament-frontend && npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+
