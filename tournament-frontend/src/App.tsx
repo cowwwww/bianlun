@@ -73,6 +73,8 @@ function App() {
             <Route path="/tournament-organizer" element={<TournamentOrganizer />} />
             <Route path="/auth/wechat/login" element={<WeChatLogin />} />
             <Route path="/auth/wechat/callback" element={<WeChatCallback />} />
+            {/* Catch-all route - redirects to home for unknown routes */}
+            <Route path="*" element={<Home />} />
           </Routes>
         </Layout>
       </Router>
