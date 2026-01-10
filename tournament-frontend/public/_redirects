@@ -1,4 +1,5 @@
-/* /index.html 200
+# Netlify/Cloudflare Pages redirects for SPA routing
+# This ensures all routes are handled by index.html
 
-
+/*    /index.html   200
 
