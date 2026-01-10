@@ -10,8 +10,6 @@
     "restartPolicyMaxRetries": 10
   }
 }
-// Railway configuration for PocketBase deployment
-// This file triggers Railway to use Docker build
 
 
 
