@@ -23,7 +23,23 @@
 
 ## 🚀 Deploy in 15 Minutes (FREE!)
 
-### Option 1: Cloudflare Pages + Railway (Recommended) ⭐
+### Option 1: Cloudflare Pages + Cloudflare Tunnel (Recommended) ⭐⭐
+
+**Cost:** FREE (100% Cloudflare, no Railway needed!)
+
+**Best for:** Getting a Cloudflare URL for PocketBase backend
+
+**Quick Setup:**
+1. Deploy PocketBase locally or to Railway/Fly.io
+2. Run: `./setup-cloudflare-tunnel.sh`
+3. Get Cloudflare URL: `https://api.bianluns.com`
+4. Update frontend env var to Cloudflare URL
+
+**Full Guide:** `CLOUDFLARE_POCKETBASE_QUICKSTART.md`
+
+---
+
+### Option 2: Cloudflare Pages + Railway ⭐
 
 **Cost:** FREE (Railway gives $5/month credit)
 
@@ -72,7 +88,7 @@ git push -u origin main
 
 ---
 
-### Option 2: Manual Server Deploy
+### Option 3: Manual Server Deploy
 
 See: `DEPLOY_TO_PRODUCTION.md`
 
@@ -94,11 +110,13 @@ See: `DEPLOY_TO_PRODUCTION.md`
 
 ```
 bianluns(9.5:10)/
-├── 🚀_DEPLOY_NOW.md              ⭐ Alternative quick guide
-├── ⭐_START_HERE.md               ⭐⭐⭐ YOU ARE HERE
-├── CLOUDFLARE_QUICK_START.md     📖 Detailed Cloudflare guide
-├── DEPLOY_CLOUDFLARE.md          📖 Full deployment options
-├── WECHAT_LOGIN_SETUP.md         📖 WeChat OAuth guide
+├── 🚀_DEPLOY_NOW.md                      ⭐ Alternative quick guide
+├── ⭐_START_HERE.md                       ⭐⭐⭐ YOU ARE HERE
+├── CLOUDFLARE_POCKETBASE_QUICKSTART.md   🆕 Cloudflare Tunnel for PocketBase
+├── SETUP_CLOUDFLARE_TUNNEL.md            📖 Detailed Cloudflare Tunnel guide
+├── CLOUDFLARE_QUICK_START.md             📖 Detailed Cloudflare guide
+├── DEPLOY_CLOUDFLARE.md                  📖 Full deployment options
+├── WECHAT_LOGIN_SETUP.md                 📖 WeChat OAuth guide
 │
 ├── tournament-frontend/
 │   ├── dist/                     ✅ Ready to deploy

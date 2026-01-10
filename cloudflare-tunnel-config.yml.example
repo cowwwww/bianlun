@@ -1,0 +1,30 @@
+# Cloudflare Tunnel Configuration Example
+# Copy this file to cloudflare-tunnel-config.yml and update with your values
+
+tunnel: <YOUR_TUNNEL_ID>
+credentials-file: ~/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # Route PocketBase API through Cloudflare
+  # Replace 'api.bianluns.com' with your desired subdomain
+  - hostname: api.bianluns.com
+    # For local PocketBase:
+    service: http://localhost:8090
+    # OR for Railway:
+    # service: https://bianluns-api.up.railway.app
+    # OR for Fly.io:
+    # service: https://bianluns-pocketbase.fly.dev
+  
+  # Catch-all rule (must be last)
+  - service: http_status:404
+
+# Instructions:
+# 1. Run: cloudflared tunnel login
+# 2. Run: cloudflared tunnel create pocketbase-tunnel
+# 3. Copy the tunnel ID and replace <YOUR_TUNNEL_ID> above
+# 4. Update credentials-file path with your tunnel ID
+# 5. Update hostname to your desired subdomain
+# 6. Update service URL to your PocketBase location
+# 7. Add DNS CNAME record: api -> <TUNNEL_ID>.cfargotunnel.com
+# 8. Run: cloudflared tunnel --config cloudflare-tunnel-config.yml run pocketbase-tunnel
+
