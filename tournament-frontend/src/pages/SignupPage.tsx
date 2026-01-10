@@ -6,6 +6,8 @@ import {
   Button,
   Container,
   CircularProgress,
+  Card,
+  CardContent,
   Alert,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
@@ -13,9 +15,7 @@ import { auth } from '../services/authService';
 
 const SignupPage = () => {
   const [name, setName] = useState('');
-  const [wechatId, setWechatId] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -26,8 +26,14 @@ const SignupPage = () => {
     setLoading(true);
 
     // Validation
-    if (!name?.trim() || !wechatId?.trim() || !password || !confirmPassword) {
-      setError('请填写所有必填字段');
+    if (!name?.trim()) {
+      setError('请输入真实姓名');
+      setLoading(false);
+      return;
+    }
+
+    if (!password) {
+      setError('请设置一个密码');
       setLoading(false);
       return;
     }
@@ -38,23 +44,10 @@ const SignupPage = () => {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError('密码不匹配');
-      setLoading(false);
-      return;
-    }
-
-    // Validate WeChat ID format (basic validation)
-    const wechatIdRegex = /^[a-zA-Z][a-zA-Z0-9_-]{5,19}$/;
-    if (!wechatIdRegex.test(wechatId)) {
-      setError('微信号格式不正确（6-20位，字母开头，可包含字母、数字、下划线、减号）');
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Create user with WeChat ID directly
-      await auth.signUp(wechatId.trim(), password, name.trim());
+      // Create user with name and password
+      // Using name as both identifier and display name
+      await auth.signUp(name.trim(), password, name.trim());
 
       console.log('User signed up successfully');
       navigate('/profile');
@@ -64,9 +57,7 @@ const SignupPage = () => {
       
       // Handle specific error messages
       if (errorMessage.includes('已被注册') || errorMessage.includes('already')) {
-        setError('该微信号已被注册，请直接登录或使用其他微信号');
-      } else if (errorMessage.includes('格式无效') || errorMessage.includes('invalid')) {
-        setError('微信号格式无效，请检查后重试');
+        setError('该姓名已被注册，请直接登录或使用其他姓名');
       } else if (errorMessage.includes('密码') || errorMessage.includes('password')) {
         setError('密码不符合要求，请使用至少6位字符');
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
@@ -89,88 +80,64 @@ const SignupPage = () => {
           alignItems: 'center',
         }}
       >
-        <Typography component="h1" variant="h5">
+        <Typography component="h1" variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
           注册账号
         </Typography>
-        
-        <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2, mb: 3 }}>
-          使用微信号创建您的账号
-        </Typography>
 
-        {error && (
-          <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        <Card sx={{ width: '100%' }}>
+          <CardContent>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
 
-        <Box component="form" onSubmit={handleSignup} noValidate sx={{ mt: 1, width: '100%' }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="name"
-            label="姓名 *"
-            name="name"
-            autoComplete="name"
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="请输入您的真实姓名"
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="wechatId"
-            label="微信号 *"
-            name="wechatId"
-            value={wechatId}
-            onChange={(e) => setWechatId(e.target.value)}
-            placeholder="请输入您的微信号"
-            helperText="微信号将作为您的登录账号"
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="密码 *"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="至少6位字符"
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="confirm-password"
-            label="确认密码 *"
-            type="password"
-            id="confirm-password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="请再次输入密码"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : '注册账号'}
-          </Button>
-        </Box>
+            <Box component="form" onSubmit={handleSignup} noValidate>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="name"
+                label="真实姓名"
+                name="name"
+                autoComplete="name"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="请输入您的真实姓名"
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="设置一个密码"
+                type="password"
+                id="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="至少6位字符"
+                helperText="密码至少需要6个字符"
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} color="inherit" /> : '注册账号'}
+              </Button>
+            </Box>
 
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          <Link to="/login">
-            {"已有账号？立即登录"}
-          </Link>
-        </Typography>
+            <Typography variant="body2" align="center">
+              <Link to="/login" style={{ textDecoration: 'none' }}>
+                {"已有账号？立即登录"}
+              </Link>
+            </Typography>
+          </CardContent>
+        </Card>
       </Box>
     </Container>
   );

@@ -52,11 +52,11 @@ class AuthService {
     this.listeners.forEach(listener => listener(user));
   }
 
-  async signIn(wechatId: string, password: string): Promise<User> {
+  async signIn(name: string, password: string): Promise<User> {
     try {
-      // Simple database check - find user by wechat_id and verify password
+      // Simple database check - find user by full_name and verify password
       const records = await pb.collection('users').getList(1, 1, {
-        filter: `wechat_id = "${wechatId}" && password = "${password}"`
+        filter: `full_name = "${name}" && password = "${password}"`
       });
       
       if (records.items.length === 0) {
@@ -69,9 +69,9 @@ class AuthService {
       pb.authStore.save('dummy-token', user);
       
       return {
-        id: user.wechat_id,
+        id: user.id,
         name: user.full_name,
-        wechatId: user.wechat_id || wechatId,
+        wechatId: user.wechat_id,
       };
     } catch (error) {
       console.error('Sign in error:', error);
@@ -79,28 +79,27 @@ class AuthService {
     }
   }
 
-  async signUp(wechatId: string, password: string, fullName: string): Promise<User> {
+  async signUp(name: string, password: string, fullName: string): Promise<User> {
     try {
       // Simple create - just store the data directly
       await pb.collection('users').create({
-        wechat_id: wechatId,
         full_name: fullName,
         password: password
       });
 
       // Auto sign in after signup
-      return await this.signIn(wechatId, password);
+      return await this.signIn(fullName, password);
     } catch (error) {
       console.error('Sign up error:', error);
       
       // Parse PocketBase error response
-      const pbError = error as { response?: { data?: { wechat_id?: unknown; password?: unknown } }; message?: string };
+      const pbError = error as { response?: { data?: { full_name?: unknown; password?: unknown } }; message?: string };
       if (pbError.response && pbError.response.data) {
         const errorData = pbError.response.data;
         
-        // Check for duplicate WeChat ID
-        if (errorData.wechat_id) {
-          throw new Error('该微信号已被注册');
+        // Check for duplicate name
+        if (errorData.full_name) {
+          throw new Error('该姓名已被注册');
         }
         
         // Check for password validation errors
@@ -120,13 +119,13 @@ class AuthService {
   async updateProfile(updates: Partial<User>): Promise<void> {
     try {
       const currentUser = this.getCurrentUser();
-      if (!currentUser || !currentUser.wechatId) {
+      if (!currentUser || !currentUser.id) {
         throw new Error('No user logged in');
       }
 
-      // Find user record by wechat_id
+      // Find user record by id
       const records = await pb.collection('users').getList(1, 1, {
-        filter: `wechat_id = "${currentUser.wechatId}"`
+        filter: `id = "${currentUser.id}"`
       });
       
       if (records.items.length > 0) {
