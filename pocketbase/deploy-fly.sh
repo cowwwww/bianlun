@@ -30,3 +30,4 @@ echo "✅ Deployment complete!"
 echo "📍 Your PocketBase URL: https://bianluns-pocketbase.fly.dev"
 echo "🔐 Admin panel: https://bianluns-pocketbase.fly.dev/_/"
 
+

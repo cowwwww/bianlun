@@ -162,3 +162,4 @@ echo "Update your frontend environment variable:"
 echo "  VITE_POCKETBASE_URL=https://$HOSTNAME"
 echo ""
 
+

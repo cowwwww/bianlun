@@ -44,3 +44,4 @@ echo "Next step: Update your Vercel frontend:"
 echo "VITE_POCKETBASE_URL=$RAILWAY_URL"
 echo ""
 echo "Then redeploy your frontend on Vercel."
+

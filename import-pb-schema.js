@@ -91,3 +91,4 @@ console.log('');
 console.log('For Railway deployment:');
 console.log('1. Commit and push this migration file');
 console.log('2. Redeploy on Railway');
+

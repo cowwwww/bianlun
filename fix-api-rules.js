@@ -58,8 +58,8 @@ const COLLECTIONS_TO_FIX = [
 
 // API Rules configuration
 const API_RULES = {
-  listRule: '', // Public read access
-  viewRule: '', // Public read access
+  listRule: 'true', // Public read access
+  viewRule: 'true', // Public read access
   createRule: '@request.auth.id != ""', // Authenticated users only
   updateRule: '@request.auth.id != ""', // Authenticated users only
   deleteRule: '@request.auth.id != ""', // Authenticated users only
@@ -79,7 +79,7 @@ async function promptForCredentials() {
     }
 
     console.log('\n📧 PocketBase Admin Credentials Required\n');
-    
+
     rl.question('Admin Email: ', (email) => {
       rl.question('Admin Password: ', (password) => {
         rl.close();
@@ -164,7 +164,7 @@ async function main() {
   try {
     // Get credentials
     const { email, password } = await promptForCredentials();
-    
+
     console.log('\n🔐 Logging in...');
     const token = await loginToPocketBase(email, password);
     console.log('✅ Login successful!\n');

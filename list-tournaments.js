@@ -49,4 +49,3 @@ async function listTournaments() {
 }
 
 listTournaments();
-

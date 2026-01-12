@@ -139,4 +139,3 @@ After fixing:
 ---
 
 **Note**: The `_redirects` file has been created in `tournament-frontend/_redirects`. Make sure it's included in your build output!
-

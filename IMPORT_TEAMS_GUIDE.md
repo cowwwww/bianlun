@@ -201,4 +201,3 @@ After importing:
 ```bash
 node import-teams-from-excel.js http://127.0.0.1:8090 YOUR_TOURNAMENT_ID "编号 (1).xlsx"
 ```
-

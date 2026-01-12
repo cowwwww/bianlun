@@ -11,12 +11,19 @@ import {
   Grid,
   Tabs,
   Tab,
+  Button,
+  TextField,
+  Alert,
+  Card,
+  CardContent,
 } from '@mui/material';
 import { getTournamentById, type Tournament } from '../services/tournamentService';
 import { listRegistrationsByTournament, type Registration } from '../services/registrationService';
 import { listMatchesByTournament, type Match } from '../services/matchService';
 import { getTournamentTeamMembers, type TeamMember } from '../services/teamMemberService';
 import { listJudges, type Judge } from '../services/judgeService';
+import { getMatchCheckins, checkinForMatch, type MatchCheckin } from '../services/checkinService';
+import { getMatchScores, submitMatchScore, getDefaultScoringDimensions, type MatchScore } from '../services/scoringService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -49,6 +56,10 @@ const TournamentDetail = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [judges, setJudges] = useState<Judge[]>([]);
   const [tabValue, setTabValue] = useState(0);
+  const [checkins, setCheckins] = useState<MatchCheckin[]>([]);
+  const [scores, setScores] = useState<MatchScore[]>([]);
+  const [checkinName, setCheckinName] = useState('');
+  const [selectedMatchForCheckin, setSelectedMatchForCheckin] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -164,6 +175,8 @@ const TournamentDetail = () => {
             <Tab label="队伍信息" />
             <Tab label="评委信息" />
             <Tab label="比赛对阵" />
+            <Tab label="签到" />
+            <Tab label="评分" />
           </Tabs>
         </Box>
 
@@ -191,7 +204,7 @@ const TournamentDetail = () => {
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
               PART01 - 简介
             </Typography>
- 
+
 
             <Typography variant="body1" paragraph sx={{ mb: 2 }}>
               欢迎来到 2026年ADA 全国线上辩论赛！
@@ -204,8 +217,8 @@ const TournamentDetail = () => {
             </Typography>
             <Typography variant="body1" paragraph>
               辩题横跨科技与法律，触及政策与未来，也延伸至哲学与价值本身。
-          </Typography>
-          <Typography variant="body1" paragraph>
+            </Typography>
+            <Typography variant="body1" paragraph>
               诚挚邀请您再次与全国的思辨者汇聚。
             </Typography>
 
@@ -254,8 +267,8 @@ const TournamentDetail = () => {
               <Typography variant="body1" sx={{ mb: 1 }}>随评义务场次为n+1场，若需代请评委费用为50元一位一场。</Typography>
               <Typography variant="body1" sx={{ fontStyle: 'italic' }}>
                 注：本赛设有申诉机制。队伍需完整阅读《赛事章程》和《队伍须知》，随评需完整阅读《评委须知》。
-          </Typography>
-        </Box>
+              </Typography>
+            </Box>
 
             <Divider sx={{ my: 3 }} />
 
@@ -282,7 +295,7 @@ const TournamentDetail = () => {
               <Typography variant="body1">🏁 <strong>1 月 24 日：</strong>比赛开启</Typography>
               <Typography variant="body1">⚡ <strong>1 月 25 日 - 31日：</strong>比赛进⾏（预计）</Typography>
               <Typography variant="body1">🎊 <strong>2 月 8 月：</strong>闭幕式</Typography>
-        </Box>
+            </Box>
 
             <Divider sx={{ my: 3 }} />
 
@@ -310,7 +323,7 @@ const TournamentDetail = () => {
               <Typography variant="body1" sx={{ mb: 1 }}><strong>4分00秒：</strong>数据检验环节(如有)</Typography>
             </Box>
 
-        <Divider sx={{ my: 3 }} />
+            <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
               PART07 - 其他信息
@@ -340,31 +353,31 @@ const TournamentDetail = () => {
             </Typography>
           </Box>
 
-        {tournament.scoringConfig?.length ? (
-          <>
+          {tournament.scoringConfig?.length ? (
+            <>
               <Divider sx={{ my: 3 }} />
-            <Typography variant="h5" gutterBottom>
-              评分维度（主办方设定）
-            </Typography>
-            <Stack spacing={1} sx={{ mb: 3 }}>
-              {tournament.scoringConfig.map((d) => (
-                <Typography key={d.key} variant="body2" color="text.secondary">
-                  {d.label}：满分 {d.max}{d.weight ? `，权重 ${d.weight}` : ''} 分
-                </Typography>
-              ))}
-            </Stack>
-          </>
-        ) : null}
+              <Typography variant="h5" gutterBottom>
+                评分维度（主办方设定）
+              </Typography>
+              <Stack spacing={1} sx={{ mb: 3 }}>
+                {tournament.scoringConfig.map((d) => (
+                  <Typography key={d.key} variant="body2" color="text.secondary">
+                    {d.label}：满分 {d.max}{d.weight ? `，权重 ${d.weight}` : ''} 分
+                  </Typography>
+                ))}
+              </Stack>
+            </>
+          ) : null}
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
           <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
             参赛队伍信息
-        </Typography>
+          </Typography>
 
-        {registrations.length === 0 ? (
-          <Typography color="text.secondary">暂无报名信息</Typography>
-        ) : (
+          {registrations.length === 0 ? (
+            <Typography color="text.secondary">暂无报名信息</Typography>
+          ) : (
             <Stack spacing={3}>
               {registrations.map((reg) => {
                 const teamMembersList = teamMembers.filter(m => m.registrationId === reg.id);
@@ -495,15 +508,15 @@ const TournamentDetail = () => {
         <TabPanel value={tabValue} index={3}>
           <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
             比赛对阵
-        </Typography>
+          </Typography>
 
-        {matches.length === 0 ? (
-          <Typography color="text.secondary">暂未排出对阵</Typography>
-        ) : (
-          <Grid container spacing={2}>
-            {matches.map((m) => (
-              <Grid item xs={12} md={6} key={m.id}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
+          {matches.length === 0 ? (
+            <Typography color="text.secondary">暂未排出对阵</Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {matches.map((m) => (
+                <Grid item xs={12} md={6} key={m.id}>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
                       {m.round || '未命名轮次'} {m.topicId ? `｜${m.topicId}` : '｜未设置辩题'}
                     </Typography>
@@ -528,25 +541,25 @@ const TournamentDetail = () => {
                         {(m.sideACompetingMembers && m.sideACompetingMembers.length > 0 ? m.sideACompetingMembers : ['冯文静', '叶宇亮', '施少坦', '罗涵玥']).map((member, index) => (
                           <Typography key={index} variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
                             {index === 0 ? '一辩' : index === 1 ? '二辩' : index === 2 ? '三辩' : '四辩'}：{member}
-                  </Typography>
+                          </Typography>
                         ))}
                       </Box>
                     ) : null}
 
                     <Typography variant="body2" sx={{ mt: 1, mb: 0.5 }}>
                       <strong>反方：</strong>{m.sideBId === '2iwosh9g9x7apxu' ? '显允—啊！打～' : (registrations.find(r => r.id === m.sideBId)?.teamName || m.sideBId || '待定')}
-                  </Typography>
+                    </Typography>
                     {(m.sideBCompetingMembers && m.sideBCompetingMembers.length > 0) || m.sideBId === '2iwosh9g9x7apxu' ? (
                       <Box sx={{ ml: 2 }}>
                         {(m.sideBCompetingMembers && m.sideBCompetingMembers.length > 0 ? m.sideBCompetingMembers : ['黄华', '刘畅', '吴昊森', '翁一凡']).map((member, index) => (
                           <Typography key={index} variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
                             {index === 0 ? '一辩' : index === 1 ? '二辩' : index === 2 ? '三辩' : '四辩'}：{member}
-                  </Typography>
+                          </Typography>
                         ))}
                       </Box>
                     ) : null}
 
-                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
                       <strong>评委：</strong>{m.judgeIds?.length ? m.judgeIds.map(judgeId => judges.find(j => j.id === judgeId)?.fullName || judgeId).join('、') : '待分配'}
                     </Typography>
 
@@ -554,13 +567,222 @@ const TournamentDetail = () => {
                       <Typography variant="body2" color="primary.main" sx={{ mt: 1, fontWeight: 600 }}>
                         结果：{m.result}
                       </Typography>
-                  )}
+                    )}
 
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        )}
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </TabPanel>
+
+        {/* 签到 Tab */}
+        <TabPanel value={tabValue} index={4}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
+            比赛签到
+          </Typography>
+
+          <Alert severity="info" sx={{ mb: 3 }}>
+            请在比赛开始前15分钟进行签到。选择您参加的比赛，输入您的姓名完成签到。
+          </Alert>
+
+          {matches.length === 0 ? (
+            <Typography color="text.secondary">暂无比赛需要签到</Typography>
+          ) : (
+            <Grid container spacing={3}>
+              {matches.map((m) => {
+                const matchCheckins = checkins.filter(c => c.matchId === m.id);
+                const sideATeam = registrations.find(r => r.id === m.sideAId);
+                const sideBTeam = registrations.find(r => r.id === m.sideBId);
+
+                return (
+                  <Grid item xs={12} md={6} key={m.id}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                          {m.round || '未命名轮次'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {m.scheduledAt ? new Date(m.scheduledAt).toLocaleString('zh-CN') : '时间待定'}
+                        </Typography>
+
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2">
+                            <strong>正方：</strong>{sideATeam?.teamName || m.sideAId || '待定'}
+                          </Typography>
+                          <Typography variant="body2">
+                            <strong>反方：</strong>{sideBTeam?.teamName || m.sideBId || '待定'}
+                          </Typography>
+                        </Box>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                          已签到 ({matchCheckins.length}人)：
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 2 }}>
+                          {matchCheckins.map((c) => (
+                            <Chip
+                              key={c.id}
+                              label={`${c.userName} (${c.userRole === 'judge' ? '评委' : c.position || '队员'})`}
+                              size="small"
+                              color={c.userRole === 'judge' ? 'info' : 'default'}
+                            />
+                          ))}
+                          {matchCheckins.length === 0 && (
+                            <Typography variant="body2" color="text.secondary">暂无人签到</Typography>
+                          )}
+                        </Stack>
+
+                        {selectedMatchForCheckin === m.id ? (
+                          <Stack spacing={2}>
+                            <TextField
+                              label="您的姓名"
+                              value={checkinName}
+                              onChange={(e) => setCheckinName(e.target.value)}
+                              size="small"
+                              fullWidth
+                            />
+                            <Stack direction="row" spacing={1}>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                disabled={!checkinName.trim()}
+                                onClick={async () => {
+                                  try {
+                                    const result = await checkinForMatch({
+                                      matchId: m.id,
+                                      tournamentId: tournament?.id || id || '',
+                                      userName: checkinName,
+                                      userRole: 'player',
+                                    });
+                                    if (result) {
+                                      setCheckins([...checkins, result]);
+                                      setSelectedMatchForCheckin(null);
+                                      setCheckinName('');
+                                      alert('签到成功！');
+                                    }
+                                  } catch (error) {
+                                    alert('签到失败，请重试');
+                                  }
+                                }}
+                              >
+                                确认签到
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => {
+                                  setSelectedMatchForCheckin(null);
+                                  setCheckinName('');
+                                }}
+                              >
+                                取消
+                              </Button>
+                            </Stack>
+                          </Stack>
+                        ) : (
+                          <Button
+                            variant="outlined"
+                            onClick={() => setSelectedMatchForCheckin(m.id)}
+                          >
+                            点击签到
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
+        </TabPanel>
+
+        {/* 评分 Tab */}
+        <TabPanel value={tabValue} index={5}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
+            评委评分
+          </Typography>
+
+          <Alert severity="info" sx={{ mb: 3 }}>
+            评委请在比赛结束后提交评分。选择您评判的比赛，填写评分表。
+          </Alert>
+
+          {matches.length === 0 ? (
+            <Typography color="text.secondary">暂无比赛需要评分</Typography>
+          ) : (
+            <Grid container spacing={3}>
+              {matches.map((m) => {
+                const matchScoresList = scores.filter(s => s.matchId === m.id);
+                const sideATeam = registrations.find(r => r.id === m.sideAId);
+                const sideBTeam = registrations.find(r => r.id === m.sideBId);
+                const matchJudges = m.judgeIds?.map(jid => judges.find(j => j.id === jid)).filter(Boolean) || [];
+
+                return (
+                  <Grid item xs={12} md={6} key={m.id}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                          {m.round || '未命名轮次'}
+                        </Typography>
+
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2">
+                            <strong>正方：</strong>{sideATeam?.teamName || m.sideAId || '待定'}
+                          </Typography>
+                          <Typography variant="body2">
+                            <strong>反方：</strong>{sideBTeam?.teamName || m.sideBId || '待定'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 1 }}>
+                            <strong>评委：</strong>{matchJudges.map(j => j?.fullName).join('、') || '待分配'}
+                          </Typography>
+                        </Box>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                          已提交评分 ({matchScoresList.length}):
+                        </Typography>
+                        {matchScoresList.length > 0 ? (
+                          <Stack spacing={1} sx={{ mb: 2 }}>
+                            {matchScoresList.map((s) => (
+                              <Paper key={s.id} variant="outlined" sx={{ p: 1.5 }}>
+                                <Typography variant="body2">
+                                  <strong>{s.judgeName}：</strong>
+                                  正方 {s.sideAScore} - {s.sideBScore} 反方
+                                  （{s.winner === 'A' ? '正方胜' : s.winner === 'B' ? '反方胜' : '平局'}）
+                                </Typography>
+                                {s.comments && (
+                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                    评语：{s.comments}
+                                  </Typography>
+                                )}
+                              </Paper>
+                            ))}
+                          </Stack>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            暂无评分
+                          </Typography>
+                        )}
+
+                        {m.result ? (
+                          <Chip
+                            label={`最终结果：${m.result}`}
+                            color="success"
+                          />
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            比赛尚未结束或评分未完成
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
         </TabPanel>
       </Paper>
     </Container>

@@ -41,9 +41,6 @@ const Profile = () => {
           <Typography variant="h5" gutterBottom>
             {user.name || '用户'}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            微信号：{user.wechatId || '-'}
-          </Typography>
         </Box>
 
         <Box sx={{ mb: 3 }}>

@@ -45,14 +45,14 @@ function prompt(question) {
 // Parse member info from format: "Name, School, Year, Contact, Experience"
 function parseMemberInfo(memberString) {
   if (!memberString) return null;
-  
+
   const parts = memberString.split(',').map(p => p.trim());
   const name = parts[0] || '';
-  
+
   // Check if name contains (随评)
   const isAccompanyingJudge = name.includes('（随评）') || name.includes('(随评)');
   const cleanName = name.replace(/[（(]随评[）)]/g, '').trim();
-  
+
   return {
     name: cleanName,
     school: parts[1] || '',
@@ -66,16 +66,16 @@ function parseMemberInfo(memberString) {
 // Extract team members from a row
 function extractTeamMembers(row) {
   const members = [];
-  
+
   // Get team name column
   const teamNameCol = Object.keys(row).find(key => key.includes('队伍名称'));
   if (!teamNameCol) return members;
-  
+
   // Get first member from "3.选项二：请按照以下格式提交申请"
-  const firstMemberCol = Object.keys(row).find(key => 
+  const firstMemberCol = Object.keys(row).find(key =>
     key.includes('选项二') || key.includes('请按照以下格式')
   );
-  
+
   if (firstMemberCol && row[firstMemberCol]) {
     const memberInfo = parseMemberInfo(row[firstMemberCol].toString());
     if (memberInfo && memberInfo.name) {
@@ -89,7 +89,7 @@ function extractTeamMembers(row) {
       });
     }
   }
-  
+
   // Get additional members from __EMPTY columns
   const emptyCols = Object.keys(row)
     .filter(key => key.startsWith('__EMPTY'))
@@ -99,12 +99,12 @@ function extractTeamMembers(row) {
       const bNum = b === '__EMPTY' ? 0 : parseInt(b.replace('__EMPTY_', '')) || 0;
       return aNum - bNum;
     });
-  
+
   // Check if "4.是否需要代请评委" says "不需要"
   const needJudgeCol = Object.keys(row).find(key => key.includes('是否需要代请评委'));
   const needJudge = needJudgeCol ? row[needJudgeCol]?.toString() : '';
   const shouldBeAccompanyingJudge = needJudge.includes('不需要');
-  
+
   emptyCols.forEach((col, index) => {
     if (row[col] && row[col].toString().trim()) {
       const memberInfo = parseMemberInfo(row[col].toString());
@@ -112,9 +112,9 @@ function extractTeamMembers(row) {
         // Second member (index 0 of __EMPTY) is accompanying judge if:
         // 1. Name contains (随评), OR
         // 2. "4.是否需要代请评委" says "不需要"
-        const isAccompanyingJudge = memberInfo.isAccompanyingJudge || 
-                                    (shouldBeAccompanyingJudge && index === 0);
-        
+        const isAccompanyingJudge = memberInfo.isAccompanyingJudge ||
+          (shouldBeAccompanyingJudge && index === 0);
+
         members.push({
           name: memberInfo.name,
           role: isAccompanyingJudge ? 'accompanying_judge' : 'member',
@@ -126,7 +126,7 @@ function extractTeamMembers(row) {
       }
     }
   });
-  
+
   return members;
 }
 
@@ -152,7 +152,7 @@ async function importTeams() {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-    
+
     console.log(`✅ Found ${data.length} rows\n`);
 
     if (data.length === 0) {
@@ -161,8 +161,9 @@ async function importTeams() {
     }
 
     // Display first row to understand structure
-    console.log('📋 Sample row structure:');
-    console.log(JSON.stringify(data[0], null, 2));
+    console.log('📋 Column names found:');
+    const columns = Object.keys(data[0]);
+    columns.forEach((col, i) => console.log(`  ${i}: ${col}`));
     console.log('\n');
 
     // Ask for confirmation
@@ -174,17 +175,18 @@ async function importTeams() {
 
     let successCount = 0;
     let errorCount = 0;
+    const judgesCreated = [];
 
     // Process each row
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
-      
+
       try {
-        // Find team name column
-        const teamNameCol = Object.keys(row).find(key => 
+        // Find team name - look for column containing "队伍名称"
+        const teamNameCol = Object.keys(row).find(key =>
           key.includes('队伍名称')
         );
-        
+
         if (!teamNameCol || !row[teamNameCol]) {
           console.log(`⚠️  Row ${i + 1}: Skipping - no team name found`);
           continue;
@@ -196,22 +198,90 @@ async function importTeams() {
           continue;
         }
 
-        // Extract team members
-        const members = extractTeamMembers(row);
+        // Find members from "选项二" column (first member with 领队)
+        const members = [];
+
+        // Get first member from "3.选项二：请按照以下格式提交申请" column
+        const firstMemberCol = Object.keys(row).find(key =>
+          key.includes('选项二') && key.includes('格式')
+        );
+
+        if (firstMemberCol && row[firstMemberCol]) {
+          const memberInfo = parseMemberInfo(row[firstMemberCol].toString());
+          if (memberInfo && memberInfo.name) {
+            members.push({
+              name: memberInfo.name,
+              role: memberInfo.isAccompanyingJudge ? 'accompanying_judge' : 'leader',
+              school: memberInfo.school,
+              year: memberInfo.year,
+              contact: memberInfo.contact,
+              experience: memberInfo.experience,
+            });
+          }
+        }
+
+        // Check if team needs accompanying judge ("不需要" means they have their own)
+        const needJudgeCol = Object.keys(row).find(key => key.includes('是否需要代请评委'));
+        const needJudge = needJudgeCol ? row[needJudgeCol]?.toString() : '';
+        const hasOwnJudge = needJudge.includes('不需要');
+
+        // Get additional members from subsequent columns (null headers become indexed)
+        // These appear after the first member column
+        let memberIndex = 0;
+        for (const key of Object.keys(row)) {
+          // Skip known columns
+          if (key.includes('队伍名称') || key.includes('选项一') ||
+            key.includes('是否需要') || key.includes('随评履历') ||
+            key.includes('备注') || key.includes('报名须知') ||
+            key.includes('编号') || key.includes('时间') ||
+            key.includes('地理位置') || key.includes('IP') ||
+            key.includes('UA') || key.includes('Referrer') ||
+            key === firstMemberCol) {
+            continue;
+          }
+
+          const value = row[key];
+          if (!value || typeof value !== 'string') continue;
+
+          // Check if it looks like member info (contains comma-separated data)
+          if (value.includes(',') && !value.includes('http')) {
+            const memberInfo = parseMemberInfo(value);
+            if (memberInfo && memberInfo.name && !members.find(m => m.name === memberInfo.name)) {
+              // Determine role
+              let role = 'member';
+              if (memberInfo.isAccompanyingJudge) {
+                role = 'accompanying_judge';
+              } else if (hasOwnJudge && memberIndex === 0 && members.length === 1) {
+                // Second person is accompanying judge if they don't need external judge
+                role = 'accompanying_judge';
+              }
+
+              members.push({
+                name: memberInfo.name,
+                role: role,
+                school: memberInfo.school,
+                year: memberInfo.year,
+                contact: memberInfo.contact,
+                experience: memberInfo.experience,
+              });
+              memberIndex++;
+            }
+          }
+        }
 
         if (members.length === 0) {
           console.log(`⚠️  Row ${i + 1} (${teamName}): Skipping - no team members found`);
           continue;
         }
 
-        // Get contact from first member (usually in the format)
+        // Get contact from first member
         const contact = members[0]?.contact || '';
 
         // Create registration
         console.log(`\n📝 Row ${i + 1}: Creating registration for: ${teamName}`);
         console.log(`   Members: ${members.length}`);
         const accompanyingJudge = members.find(m => m.role === 'accompanying_judge');
-        console.log(`   Accompanying Judge: ${accompanyingJudge ? accompanyingJudge.name : 'None'}`);
+        console.log(`   随评: ${accompanyingJudge ? accompanyingJudge.name : 'None'}`);
 
         const registration = await pb.collection('registrations').create({
           tournamentId: tournamentId,
@@ -237,9 +307,33 @@ async function importTeams() {
             experience: member.experience || undefined,
             isCompeting: member.role !== 'accompanying_judge',
           };
-          
+
           await pb.collection('team_members').create(memberData);
           console.log(`   ✅ Member added: ${member.name} (${member.role})`);
+
+          // If this is an accompanying judge, also add to judges collection
+          if (member.role === 'accompanying_judge') {
+            try {
+              const judgeData = {
+                fullName: member.name,
+                experience: member.experience || '',
+                phone: member.contact || '',
+                wechatId: member.contact || '',
+                judgeTypes: ['随队评委'],
+                status: 'approved',
+                obligationsLeft: 3,
+                totalObligations: 3,
+                teamId: registration.id,
+                teamName: teamName
+              };
+
+              await pb.collection('judges').create(judgeData);
+              console.log(`   ✅ Judge created: ${member.name} (随队评委)`);
+              judgesCreated.push(member.name);
+            } catch (judgeError) {
+              console.log(`   ⚠️  Judge creation skipped for ${member.name}: ${judgeError.message}`);
+            }
+          }
         }
 
         successCount++;
@@ -254,7 +348,11 @@ async function importTeams() {
 
     console.log('\n' + '='.repeat(50));
     console.log('📊 Import Summary:');
-    console.log(`   ✅ Successfully imported: ${successCount}`);
+    console.log(`   ✅ Successfully imported: ${successCount} teams`);
+    console.log(`   ✅ Judges created: ${judgesCreated.length}`);
+    if (judgesCreated.length > 0) {
+      console.log(`      - ${judgesCreated.join('\n      - ')}`);
+    }
     console.log(`   ❌ Failed: ${errorCount}`);
     console.log('='.repeat(50) + '\n');
 

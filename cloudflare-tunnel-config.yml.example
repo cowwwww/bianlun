@@ -28,3 +28,4 @@ ingress:
 # 7. Add DNS CNAME record: api -> <TUNNEL_ID>.cfargotunnel.com
 # 8. Run: cloudflared tunnel --config cloudflare-tunnel-config.yml run pocketbase-tunnel
 
+
