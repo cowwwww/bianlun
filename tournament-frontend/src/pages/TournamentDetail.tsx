@@ -70,12 +70,44 @@ const TournamentDetail = () => {
         listJudges(),
       ]);
 
-      // If no registrations found, try the old tournament ID for backward compatibility
+      // If no registrations found from direct query, reconstruct from team members
       let finalRegData = regData;
-      if (regData.length === 0 && tournamentId === '5zrkihweutfv72k') {
-        const oldRegData = await listRegistrationsByTournament('ada-2026-fastdebate');
-        finalRegData = oldRegData;
+      if (regData.length === 0) {
+        // Reconstruct registrations from team members
+        const registrationMap = new Map();
+
+        memberData.forEach(member => {
+          if (!registrationMap.has(member.registrationId)) {
+            registrationMap.set(member.registrationId, {
+              id: member.registrationId,
+              tournamentId: tournamentId,
+              teamName: '',
+              participants: [],
+              status: 'approved' as const,
+              paymentStatus: 'paid' as const,
+              createdAt: '',
+              updatedAt: '',
+            });
+          }
+
+          const reg = registrationMap.get(member.registrationId);
+          reg.participants.push(member.name);
+
+          // Set team name from leader
+          if (member.role === 'leader' && !reg.teamName) {
+            reg.teamName = member.name.replace(/[（(]领队[）)]/g, '').trim();
+          }
+        });
+
+        finalRegData = Array.from(registrationMap.values());
+
+        // If still no registrations found, try the old tournament ID for backward compatibility
+        if (finalRegData.length === 0 && tournamentId === '5zrkihweutfv72k') {
+          const oldRegData = await listRegistrationsByTournament('ada-2026-fastdebate');
+          finalRegData = oldRegData;
+        }
       }
+
       setRegistrations(finalRegData);
       setMatches(matchData);
       setTeamMembers(memberData);
@@ -128,10 +160,10 @@ const TournamentDetail = () => {
               }
             }}
           >
-            <Tab label="📋 赛事信息" />
-            <Tab label="👥 队伍信息" />
-            <Tab label="👨‍⚖️ 评委信息" />
-            <Tab label="🏟️ 比赛对阵" />
+            <Tab label="赛事信息" />
+            <Tab label="队伍信息" />
+            <Tab label="评委信息" />
+            <Tab label="比赛对阵" />
           </Tabs>
         </Box>
 
@@ -145,20 +177,6 @@ const TournamentDetail = () => {
             <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
               ADA线上辩论全国赛 - 2026
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              2025-2026
-            </Typography>
-
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              ADA辩论
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 3 }}>
-              即兴辩论赛
-            </Typography>
-
-            <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
-              邀请函
-            </Typography>
 
             <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 3 }}>
               ADA线上辩论全国赛 - 速思锐辩
@@ -171,11 +189,9 @@ const TournamentDetail = () => {
             <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-              PART01 - INFORMATION
+              PART01 - 简介
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              简介
-            </Typography>
+ 
 
             <Typography variant="body1" paragraph sx={{ mb: 2 }}>
               欢迎来到 2026年ADA 全国线上辩论赛！
@@ -196,11 +212,9 @@ const TournamentDetail = () => {
             <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-              PART02 - INFORMATION
+              PART02 - 赛事信息
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              赛事信息
-            </Typography>
+
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body1"><strong>赛事名称:</strong> ADA线上辩论全国赛2026 - 速思锐辩</Typography>
@@ -214,11 +228,9 @@ const TournamentDetail = () => {
             <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-              PART03 - REGISTRATION
+              PART03 - 报名信息
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              报名信息
-            </Typography>
+
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body1" sx={{ mb: 1 }}>
@@ -248,10 +260,7 @@ const TournamentDetail = () => {
             <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-              PART04 - AWARD
-            </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              奖金设置
+              PART04 - 奖金设置
             </Typography>
 
             <Box sx={{ mb: 2 }}>
@@ -263,11 +272,8 @@ const TournamentDetail = () => {
             <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-              PART05 - SCHEDULE
+              PART05 - 赛事赛程
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              赛事赛程
-          </Typography>
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body1">📅 <strong>1 月 10 日：</strong>辩题库公式</Typography>
@@ -281,11 +287,9 @@ const TournamentDetail = () => {
             <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-              PART06 - FORMAT
+              PART06 - 赛事赛制
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              赛事赛制
-            </Typography>
+
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body1" sx={{ mb: 1 }}><strong>20分00秒：</strong>辩题公布，备赛时间</Typography>
@@ -309,11 +313,9 @@ const TournamentDetail = () => {
         <Divider sx={{ my: 3 }} />
 
             <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-              PART06 - ADDITIONAL INFO
+              PART07 - 其他信息
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-              其他信息
-            </Typography>
+
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body1" sx={{ mb: 1 }}>
