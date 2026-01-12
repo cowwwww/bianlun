@@ -66,19 +66,27 @@ const mapRecord = (record: any): Registration => ({
 
 export const listRegistrationsByTournament = async (tournamentId: string): Promise<Registration[]> => {
   try {
+    console.log('Fetching registrations for tournament:', tournamentId);
     const records = await pb.collection('registrations').getFullList({
       sort: '-created',
       filter: `tournamentId="${tournamentId}"`,
     });
+    console.log('Raw records from PocketBase:', records.length, records);
     const mapped = records.map(mapRecord);
     const merged = [
       ...staticRegistrations.filter((s) => s.tournamentId === tournamentId && !mapped.find((m) => m.id === s.id)),
       ...mapped,
     ];
+    console.log('Merged registrations:', merged.length);
     return sortRegs(merged);
   } catch (error) {
     console.error('Error listing registrations:', error);
-    return sortRegs(staticRegistrations.filter((s) => s.tournamentId === tournamentId));
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    // Return empty array instead of static registrations to avoid confusion
+    return [];
   }
 };
 

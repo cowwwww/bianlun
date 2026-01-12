@@ -144,10 +144,17 @@ const AdminDashboard: React.FC = () => {
   const loadTeamRegistrations = async (tid: string) => {
     try {
       setLoadingTeams(true);
+      console.log('Loading registrations for tournament:', tid);
       const data = await listRegistrationsByTournament(tid);
+      console.log('Loaded registrations:', data.length, data);
       setRegistrations(data);
     } catch (error) {
       console.error('加载队伍失败', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message, error.stack);
+      }
+      // Show error to user
+      alert(`加载队伍失败: ${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setLoadingTeams(false);
     }
