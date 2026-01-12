@@ -43,6 +43,7 @@ import { listJudges, updateJudgeTypes, createJudge, type Judge, type JudgeType }
 import { getFormConfig, updateFormConfig, type FormConfig } from '../services/formConfigService';
 import { getCircuit, publishCircuit, type Circuit } from '../services/circuitService';
 import { getTeamMembers, updateTeamMember, createTeamMember, type TeamMember } from '../services/teamMemberService';
+import { auth, type User } from '../services/authService';
 
 // Helper function to map RecordModel to TeamMember
 const mapRecordToTeamMember = (record: Record<string, unknown>): TeamMember => ({
@@ -64,6 +65,8 @@ import pb from '../services/pocketbase';
 type TabKey = 'overview' | 'teams' | 'tournament' | 'forms' | 'judges' | 'circuit' | 'scoring';
 
 const AdminDashboard: React.FC = () => {
+  const allowedNames = ['曹千蕙', '秦莉洁', 'luoji', '杨贻婷'];
+  const allowedNamesLower = allowedNames.map((n) => n.toLowerCase());
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [tournamentId, setTournamentId] = useState('');
@@ -96,6 +99,18 @@ const AdminDashboard: React.FC = () => {
   const [loadingJudges, setLoadingJudges] = useState(false);
   const [savingJudgeId, setSavingJudgeId] = useState<string | null>(null);
   const [formConfigDialog, setFormConfigDialog] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    // Listen for auth changes and gate admin access
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      setAuthChecked(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const loadTournaments = async () => {
@@ -132,6 +147,11 @@ const AdminDashboard: React.FC = () => {
   }, [tournamentId, tournaments]);
 
 
+  const isAuthorized = currentUser?.name
+    ? allowedNamesLower.includes(currentUser.name.toLowerCase())
+    : false;
+
+
   const loadAllRegistrations = async () => {
     try {
       const data = await listAllRegistrations();
@@ -145,8 +165,38 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoadingTeams(true);
       console.log('Loading registrations for tournament:', tid);
-      const data = await listRegistrationsByTournament(tid);
-      console.log('Loaded registrations:', data.length, data);
+
+      // Get team members for this tournament
+      const members = await getTournamentTeamMembers(tid);
+
+      // Group by registration to reconstruct registrations
+      const registrationMap = new Map();
+
+      members.forEach(member => {
+        if (!registrationMap.has(member.registrationId)) {
+          registrationMap.set(member.registrationId, {
+            id: member.registrationId,
+            tournamentId: tid,
+            teamName: '',
+            participants: [],
+            status: 'approved' as const,
+            paymentStatus: 'paid' as const,
+            createdAt: '',
+            updatedAt: '',
+          });
+        }
+
+        const reg = registrationMap.get(member.registrationId);
+        reg.participants.push(member.name);
+
+        // Set team name from leader
+        if (member.role === 'leader' && !reg.teamName) {
+          reg.teamName = member.name.replace(/[（(]领队[）)]/g, '').trim();
+        }
+      });
+
+      const data = Array.from(registrationMap.values());
+      console.log('Reconstructed registrations:', data.length, data);
       setRegistrations(data);
     } catch (error) {
       console.error('加载队伍失败', error);
