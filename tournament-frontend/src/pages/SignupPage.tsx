@@ -104,7 +104,11 @@ const SignupPage = () => {
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="请输入您的真实姓名"
+                placeholder="请输入您的真实姓名（支持中文）"
+                inputProps={{
+                  pattern: '.*',
+                  inputMode: 'text',
+                }}
               />
               <TextField
                 margin="normal"
