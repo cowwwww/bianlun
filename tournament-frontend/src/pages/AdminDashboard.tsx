@@ -1235,113 +1235,111 @@ const AdminDashboard: React.FC = () => {
             {loadingJudges ? (
               <Typography color="text.secondary">加载评委列表中...</Typography>
             ) : (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>评委</TableCell>
-                    <TableCell>经验 / 备注</TableCell>
-                    <TableCell>联系方式</TableCell>
-                    <TableCell>所属队伍</TableCell>
-                    <TableCell>剩余义务</TableCell>
-                    <TableCell>类型标记</TableCell>
-                    <TableCell align="right">操作</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {judges.map((judge) => (
-                    <TableRow key={judge.id}>
-                      <TableCell>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Avatar>{judge.fullName?.[0] || '评'}</Avatar>
-                          <Typography variant="subtitle2">{judge.fullName}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          maxWidth: 200
-                        }}>
-                          {judge.experience || '未填写经验'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: 200
-                        }}>
-                          {judge.comments || '无备注'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">微信：{judge.wechatId || '无'}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {judge.teamName || '无'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {judge.obligationsLeft !== undefined ? judge.obligationsLeft : '未设置'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          size="small"
-                          fullWidth
-                          value={judge.judgeTypes?.[0] || ''}
-                          onChange={(e) => {
-                            const nextType = e.target.value ? [e.target.value as JudgeType] : [];
-                            setJudges((prev) =>
-                              prev.map((j) => (j.id === judge.id ? { ...j, judgeTypes: nextType } : j))
-                            );
-                          }}
-                        >
-                          <MenuItem value="">未分类</MenuItem>
-                          <MenuItem value="随队评委">随队评委</MenuItem>
-                          <MenuItem value="外聘评委">外聘评委</MenuItem>
-                          <MenuItem value="教学导师">教学导师</MenuItem>
-                          <MenuItem value="技术裁判">技术裁判</MenuItem>
-                        </Select>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
-                          <Button
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 1000 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>评委</TableCell>
+                      <TableCell>经验 / 备注</TableCell>
+                      <TableCell>联系方式</TableCell>
+                      <TableCell>所属队伍</TableCell>
+                      <TableCell>剩余义务</TableCell>
+                      <TableCell>类型标记</TableCell>
+                      <TableCell align="right">操作</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {judges.map((judge) => (
+                      <TableRow key={judge.id}>
+                        <TableCell>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Avatar>{judge.fullName?.[0] || '评'}</Avatar>
+                            <Typography variant="subtitle2">{judge.fullName}</Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell sx={{ minWidth: 300 }}>
+                          <Typography variant="body2" sx={{
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                          }}>
+                            {judge.experience || '未填写经验'}
+                          </Typography>
+                          {judge.comments && (
+                            <Typography variant="caption" color="text.secondary" sx={{
+                              display: 'block',
+                              mt: 0.5,
+                            }}>
+                              备注：{judge.comments}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">微信：{judge.wechatId || '无'}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {judge.teamName || '无'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {judge.obligationsLeft !== undefined ? judge.obligationsLeft : '未设置'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Select
                             size="small"
-                            variant="outlined"
-                            onClick={() => {
-                              setSelectedJudge(judge);
-                              setJudgeDialog(true);
+                            fullWidth
+                            value={judge.judgeTypes?.[0] || ''}
+                            onChange={(e) => {
+                              const nextType = e.target.value ? [e.target.value as JudgeType] : [];
+                              setJudges((prev) =>
+                                prev.map((j) => (j.id === judge.id ? { ...j, judgeTypes: nextType } : j))
+                              );
                             }}
                           >
-                            编辑
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleDeleteJudge(judge.id)}
-                          >
-                            删除
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            disabled={savingJudgeId === judge.id}
-                            onClick={() => handleUpdateJudgeType(judge.id, judge.judgeTypes || [])}
-                          >
-                            {savingJudgeId === judge.id ? '保存中...' : '保存'}
-                          </Button>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                            <MenuItem value="">未分类</MenuItem>
+                            <MenuItem value="随队评委">随队评委</MenuItem>
+                            <MenuItem value="外聘评委">外聘评委</MenuItem>
+                            <MenuItem value="教学导师">教学导师</MenuItem>
+                            <MenuItem value="技术裁判">技术裁判</MenuItem>
+                          </Select>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Stack direction="row" spacing={1} justifyContent="flex-end">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                setSelectedJudge(judge);
+                                setJudgeDialog(true);
+                              }}
+                            >
+                              编辑
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleDeleteJudge(judge.id)}
+                            >
+                              删除
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              disabled={savingJudgeId === judge.id}
+                              onClick={() => handleUpdateJudgeType(judge.id, judge.judgeTypes || [])}
+                            >
+                              {savingJudgeId === judge.id ? '保存中...' : '保存'}
+                            </Button>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
             )}
           </Paper>
         </Stack>

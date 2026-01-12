@@ -26,6 +26,7 @@ import { listJudges, type Judge } from '../services/judgeService';
 import { getMatchCheckins, checkinForMatch, type MatchCheckin } from '../services/checkinService';
 import { getMatchScores, submitMatchScore, getDefaultScoringDimensions, type MatchScore } from '../services/scoringService';
 import MatchDetailDialog from '../components/MatchDetailDialog';
+import TournamentBracket from '../components/TournamentBracket';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -64,6 +65,7 @@ const TournamentDetail = () => {
   const [selectedMatchForCheckin, setSelectedMatchForCheckin] = useState<string | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+  const [matchViewMode, setMatchViewMode] = useState<'list' | 'bracket'>('list');
 
   useEffect(() => {
     if (id) {
@@ -518,12 +520,39 @@ const TournamentDetail = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
-            比赛对阵
-          </Typography>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+              比赛对阵
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              <Button
+                variant={matchViewMode === 'list' ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => setMatchViewMode('list')}
+              >
+                列表视图
+              </Button>
+              <Button
+                variant={matchViewMode === 'bracket' ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => setMatchViewMode('bracket')}
+              >
+                对阵图
+              </Button>
+            </Stack>
+          </Stack>
 
           {matches.length === 0 ? (
             <Typography color="text.secondary">暂未排出对阵</Typography>
+          ) : matchViewMode === 'bracket' ? (
+            <TournamentBracket
+              matches={matches}
+              registrations={registrations}
+              onMatchClick={(m) => {
+                setSelectedMatch(m);
+                setMatchDialogOpen(true);
+              }}
+            />
           ) : (
             <Grid container spacing={2}>
               {matches.map((m) => (
