@@ -824,7 +824,6 @@ const AdminDashboard: React.FC = () => {
                     <TableRow>
                       <TableCell>队伍 / 组别</TableCell>
                       <TableCell>成员</TableCell>
-
                       <TableCell>审核状态</TableCell>
                       <TableCell>支付状态</TableCell>
                       <TableCell>操作</TableCell>
