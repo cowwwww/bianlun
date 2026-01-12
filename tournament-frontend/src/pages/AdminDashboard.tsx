@@ -42,7 +42,7 @@ import { listAllRegistrations, listRegistrationsByTournament, updateRegistration
 import { listJudges, updateJudgeTypes, createJudge, type Judge, type JudgeType } from '../services/judgeService';
 import { getFormConfig, updateFormConfig, type FormConfig } from '../services/formConfigService';
 import { getCircuit, publishCircuit, type Circuit } from '../services/circuitService';
-import { getTeamMembers, updateTeamMember, createTeamMember, type TeamMember } from '../services/teamMemberService';
+import { getTeamMembers, getTournamentTeamMembers, updateTeamMember, createTeamMember, type TeamMember } from '../services/teamMemberService';
 import { auth, type User } from '../services/authService';
 
 // Helper function to map RecordModel to TeamMember
@@ -574,43 +574,43 @@ const AdminDashboard: React.FC = () => {
       <Box sx={{ mb: 4 }}>
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-        管理后台
-      </Typography>
+            管理后台
+          </Typography>
           <Chip label="队伍/报名/评委一站式" color="primary" size="small" />
         </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           主办方常用入口：赛事、报名 CRM、对阵、评委。先选择赛事即可统一管理队伍/队员、报名信息和裁判分组。
-      </Typography>
+        </Typography>
 
         {/* Quick Links */}
         <Grid container spacing={2}>
-        {quickLinks.map((item) => (
-          <Grid item xs={12} md={4} key={item.title}>
+          {quickLinks.map((item) => (
+            <Grid item xs={12} md={4} key={item.title}>
               <Card sx={{ height: '100%', borderRadius: 2, border: '1px solid #e0e0e0', cursor: 'pointer' }}
-                    onClick={item.disabled ? undefined : item.action}>
-              <CardContent>
-                <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                  <Chip label={item.tag} size="small" color="primary" />
-                </Stack>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {item.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {item.desc}
-                </Typography>
+                onClick={item.disabled ? undefined : item.action}>
+                <CardContent>
+                  <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                    <Chip label={item.tag} size="small" color="primary" />
+                  </Stack>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {item.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {item.desc}
+                  </Typography>
                   <Button
                     variant="contained"
                     onClick={(e) => { e.stopPropagation(); item.action(); }}
                     disabled={item.disabled}
                     fullWidth
                   >
-                  进入
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                    进入
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </Box>
 
       <Paper sx={{ borderRadius: 2, mb: 3 }}>
@@ -698,7 +698,7 @@ const AdminDashboard: React.FC = () => {
           {/* Current Tournament Status */}
           {tournamentId && (
             <Card sx={{ borderRadius: 2 }}>
-        <CardContent>
+              <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
                   当前赛事状态
                 </Typography>
@@ -734,7 +734,7 @@ const AdminDashboard: React.FC = () => {
                       </Box>
                       <Typography variant="body2" color="text.secondary">
                         对阵状态
-          </Typography>
+                      </Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -751,24 +751,24 @@ const AdminDashboard: React.FC = () => {
             <CardContent>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
                 队伍管理
-          </Typography>
+              </Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" sx={{ mb: 2 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>选择赛事</InputLabel>
-              <Select
-              value={tournamentId}
-              onChange={(e) => setTournamentId(e.target.value)}
-                label="选择赛事"
-              >
-                {tournaments.map((tournament) => (
-                  <MenuItem key={tournament.id} value={tournament.id}>
-                    {tournament.title || tournament.name || tournament.id}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Button
-              variant="contained"
+                <FormControl fullWidth size="small">
+                  <InputLabel>选择赛事</InputLabel>
+                  <Select
+                    value={tournamentId}
+                    onChange={(e) => setTournamentId(e.target.value)}
+                    label="选择赛事"
+                  >
+                    {tournaments.map((tournament) => (
+                      <MenuItem key={tournament.id} value={tournament.id}>
+                        {tournament.title || tournament.name || tournament.id}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  variant="contained"
                   onClick={() => tournamentId && loadTeamRegistrations(tournamentId)}
                   disabled={!tournamentId}
                   size="small"
@@ -814,98 +814,98 @@ const AdminDashboard: React.FC = () => {
                 />
               </Stack>
 
-            {loadingTeams ? (
-              <Typography color="text.secondary">加载中...</Typography>
-            ) : filteredRegistrations.length === 0 ? (
-              <Typography color="text.secondary">暂无报名或未匹配搜索。</Typography>
-            ) : (
-              <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>队伍 / 组别</TableCell>
-                  <TableCell>成员</TableCell>
-                  <TableCell>联系方式</TableCell>
-                  <TableCell>审核状态</TableCell>
-                  <TableCell>支付状态</TableCell>
-                  <TableCell>操作</TableCell>
-                </TableRow>
-              </TableHead>
-                <TableBody>
-                  {filteredRegistrations.map((reg) => (
-                    <TableRow key={reg.id}>
-                      <TableCell>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Avatar sx={{ width: 32, height: 32 }}>
-                            {reg.teamName?.[0] || '队'}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="subtitle2">{reg.teamName || '未命名队伍'}</Typography>
-                            {reg.category && (
-                              <Typography variant="caption" color="text.secondary">
-                                {reg.category}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {reg.participants?.join('，') || '未填写'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">微信：{reg.wechatId || '无'}</Typography>
-                        <Typography variant="body2">电话：{reg.contact || '无'}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          size="small"
-                          value={reg.status || 'pending'}
-                          onChange={(e) => handleUpdateRegistrationStatus(reg.id, e.target.value as Registration['status'])}
-                          sx={{ minWidth: 100 }}
-                        >
-                          <MenuItem value="pending">待审核</MenuItem>
-                          <MenuItem value="approved">已通过</MenuItem>
-                          <MenuItem value="rejected">已拒绝</MenuItem>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          size="small"
-                          value={reg.paymentStatus || 'pending'}
-                          onChange={(e) => handleUpdatePaymentStatus(reg.id, e.target.value as Registration['paymentStatus'])}
-                          sx={{ minWidth: 100 }}
-                        >
-                          <MenuItem value="pending">待支付</MenuItem>
-                          <MenuItem value="paid">已支付</MenuItem>
-                          <MenuItem value="refunded">已退款</MenuItem>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleViewTeamDetails(reg)}
-                          >
-                            查看详情
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleDeleteTeam(reg.id)}
-                          >
-                            删除
-                          </Button>
-                        </Box>
-                      </TableCell>
+              {loadingTeams ? (
+                <Typography color="text.secondary">加载中...</Typography>
+              ) : filteredRegistrations.length === 0 ? (
+                <Typography color="text.secondary">暂无报名或未匹配搜索。</Typography>
+              ) : (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>队伍 / 组别</TableCell>
+                      <TableCell>成员</TableCell>
+                      <TableCell>联系方式</TableCell>
+                      <TableCell>审核状态</TableCell>
+                      <TableCell>支付状态</TableCell>
+                      <TableCell>操作</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
+                  </TableHead>
+                  <TableBody>
+                    {filteredRegistrations.map((reg) => (
+                      <TableRow key={reg.id}>
+                        <TableCell>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Avatar sx={{ width: 32, height: 32 }}>
+                              {reg.teamName?.[0] || '队'}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle2">{reg.teamName || '未命名队伍'}</Typography>
+                              {reg.category && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {reg.category}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {reg.participants?.join('，') || '未填写'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">微信：{reg.wechatId || '无'}</Typography>
+                          <Typography variant="body2">电话：{reg.contact || '无'}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            size="small"
+                            value={reg.status || 'pending'}
+                            onChange={(e) => handleUpdateRegistrationStatus(reg.id, e.target.value as Registration['status'])}
+                            sx={{ minWidth: 100 }}
+                          >
+                            <MenuItem value="pending">待审核</MenuItem>
+                            <MenuItem value="approved">已通过</MenuItem>
+                            <MenuItem value="rejected">已拒绝</MenuItem>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            size="small"
+                            value={reg.paymentStatus || 'pending'}
+                            onChange={(e) => handleUpdatePaymentStatus(reg.id, e.target.value as Registration['paymentStatus'])}
+                            sx={{ minWidth: 100 }}
+                          >
+                            <MenuItem value="pending">待支付</MenuItem>
+                            <MenuItem value="paid">已支付</MenuItem>
+                            <MenuItem value="refunded">已退款</MenuItem>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleViewTeamDetails(reg)}
+                            >
+                              查看详情
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleDeleteTeam(reg.id)}
+                            >
+                              删除
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
           </Card>
         </Stack>
       )}
@@ -1184,10 +1184,10 @@ const AdminDashboard: React.FC = () => {
                       </Button>
                       <Button size="small" variant="contained" onClick={() => navigate('/tournament-organizer')}>
                         配置赛事
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
+                      </Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
               </Grid>
             ))}
           </Grid>
