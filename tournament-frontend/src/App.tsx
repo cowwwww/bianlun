@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { theme } from './theme';
 import Layout from './components/layout/Layout';
@@ -33,6 +33,21 @@ import WeChatCallback from './pages/WeChatCallback';
 import TournamentBracket from './pages/TournamentBracket';
 import RegistrationManagement from './pages/RegistrationManagement';
 import AdminDashboard from './pages/AdminDashboard';
+import auth from './services/authService';
+
+// Allowed admin users by name
+const ALLOWED_ADMINS = ['曹千蕙', '秦莉洁', 'luoji', '杨贻婷'];
+
+const AdminRoute = ({ children }: { children: JSX.Element }) => {
+  const user = auth.getCurrentUser();
+
+  // If not logged in or not in the allowed admin list, redirect to login
+  if (!user || !user.name || !ALLOWED_ADMINS.includes(user.name)) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
@@ -51,7 +66,14 @@ function App() {
             <Route path="/organizer/tournaments/:id/registrations" element={<RegistrationManagement />} />
             <Route path="/organizer/tournaments/:id/bracket" element={<TournamentBracket />} />
             <Route path="/registration-management" element={<RegistrationManagement />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/tournaments/mun" element={<MUNTournaments />} />
             <Route path="/tournaments/hackathon" element={<HackathonTournaments />} />
