@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import pb from '../services/pocketbase';
 import {
   Container,
   Typography,
@@ -24,6 +25,7 @@ import { getTournamentTeamMembers, type TeamMember } from '../services/teamMembe
 import { listJudges, type Judge } from '../services/judgeService';
 import { getMatchCheckins, checkinForMatch, type MatchCheckin } from '../services/checkinService';
 import { getMatchScores, submitMatchScore, getDefaultScoringDimensions, type MatchScore } from '../services/scoringService';
+import MatchDetailDialog from '../components/MatchDetailDialog';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -60,6 +62,8 @@ const TournamentDetail = () => {
   const [scores, setScores] = useState<MatchScore[]>([]);
   const [checkinName, setCheckinName] = useState('');
   const [selectedMatchForCheckin, setSelectedMatchForCheckin] = useState<string | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -83,16 +87,24 @@ const TournamentDetail = () => {
 
       // If no registrations found from direct query, reconstruct from team members
       let finalRegData = regData;
-      if (regData.length === 0) {
+      if (regData.length === 0 && memberData.length > 0) {
+        // Try to get all registrations first to get actual team names
+        console.log('No direct registrations found, attempting to get all registrations...');
+        const allRegs = await pb.collection('registrations').getFullList();
+        const regNameMap = new Map(allRegs.map((r: any) => [r.id, r.teamName || r.name || '']));
+
         // Reconstruct registrations from team members
         const registrationMap = new Map();
 
         memberData.forEach(member => {
           if (!registrationMap.has(member.registrationId)) {
+            // Try to get actual team name from registrations
+            const actualTeamName = regNameMap.get(member.registrationId) || '';
+
             registrationMap.set(member.registrationId, {
               id: member.registrationId,
               tournamentId: tournamentId,
-              teamName: '',
+              teamName: actualTeamName,
               participants: [],
               status: 'approved' as const,
               paymentStatus: 'paid' as const,
@@ -104,7 +116,7 @@ const TournamentDetail = () => {
           const reg = registrationMap.get(member.registrationId);
           reg.participants.push(member.name);
 
-          // Set team name from leader
+          // Only use leader name as fallback if no actual team name found
           if (member.role === 'leader' && !reg.teamName) {
             reg.teamName = member.name.replace(/[（(]领队[）)]/g, '').trim();
           }
@@ -516,7 +528,22 @@ const TournamentDetail = () => {
             <Grid container spacing={2}>
               {matches.map((m) => (
                 <Grid item xs={12} md={6} key={m.id}>
-                  <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        boxShadow: 2,
+                        borderColor: 'primary.main',
+                      }
+                    }}
+                    onClick={() => {
+                      setSelectedMatch(m);
+                      setMatchDialogOpen(true);
+                    }}
+                  >
                     <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
                       {m.round || '未命名轮次'} {m.topicId ? `｜${m.topicId}` : '｜未设置辩题'}
                     </Typography>
@@ -533,41 +560,50 @@ const TournamentDetail = () => {
                       </Typography>
                     )}
 
-                    <Typography variant="body2" sx={{ mb: 0.5 }}>
-                      <strong>正方：</strong>{m.sideAId === 'c47qkyf71jdy676' ? '橙子酱队' : (registrations.find(r => r.id === m.sideAId)?.teamName || m.sideAId || '待定')}
-                    </Typography>
-                    {(m.sideACompetingMembers && m.sideACompetingMembers.length > 0) || m.sideAId === 'c47qkyf71jdy676' ? (
-                      <Box sx={{ ml: 2 }}>
-                        {(m.sideACompetingMembers && m.sideACompetingMembers.length > 0 ? m.sideACompetingMembers : ['冯文静', '叶宇亮', '施少坦', '罗涵玥']).map((member, index) => (
-                          <Typography key={index} variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                            {index === 0 ? '一辩' : index === 1 ? '二辩' : index === 2 ? '三辩' : '四辩'}：{member}
-                          </Typography>
-                        ))}
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ my: 1 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Chip
+                          label={registrations.find(r => r.id === m.sideAId)?.teamName || m.sideAId || '正方待定'}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
                       </Box>
-                    ) : null}
-
-                    <Typography variant="body2" sx={{ mt: 1, mb: 0.5 }}>
-                      <strong>反方：</strong>{m.sideBId === '2iwosh9g9x7apxu' ? '显允—啊！打～' : (registrations.find(r => r.id === m.sideBId)?.teamName || m.sideBId || '待定')}
-                    </Typography>
-                    {(m.sideBCompetingMembers && m.sideBCompetingMembers.length > 0) || m.sideBId === '2iwosh9g9x7apxu' ? (
-                      <Box sx={{ ml: 2 }}>
-                        {(m.sideBCompetingMembers && m.sideBCompetingMembers.length > 0 ? m.sideBCompetingMembers : ['黄华', '刘畅', '吴昊森', '翁一凡']).map((member, index) => (
-                          <Typography key={index} variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                            {index === 0 ? '一辩' : index === 1 ? '二辩' : index === 2 ? '三辩' : '四辩'}：{member}
-                          </Typography>
-                        ))}
+                      <Typography sx={{ mx: 1 }}>VS</Typography>
+                      <Box sx={{ flex: 1, textAlign: 'right' }}>
+                        <Chip
+                          label={registrations.find(r => r.id === m.sideBId)?.teamName || m.sideBId || '反方待定'}
+                          size="small"
+                          color="secondary"
+                          variant="outlined"
+                        />
                       </Box>
-                    ) : null}
+                    </Stack>
 
                     <Typography variant="body2" sx={{ mt: 1 }}>
                       <strong>评委：</strong>{m.judgeIds?.length ? m.judgeIds.map(judgeId => judges.find(j => j.id === judgeId)?.fullName || judgeId).join('、') : '待分配'}
                     </Typography>
 
                     {m.result && (
-                      <Typography variant="body2" color="primary.main" sx={{ mt: 1, fontWeight: 600 }}>
-                        结果：{m.result}
-                      </Typography>
+                      <Chip
+                        label={`结果：${m.result}`}
+                        size="small"
+                        color="success"
+                        sx={{ mt: 1 }}
+                      />
                     )}
+
+                    <Button
+                      size="small"
+                      sx={{ mt: 1 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMatch(m);
+                        setMatchDialogOpen(true);
+                      }}
+                    >
+                      查看详情 / 签到 / 评分 →
+                    </Button>
 
                   </Paper>
                 </Grid>
@@ -785,6 +821,20 @@ const TournamentDetail = () => {
           )}
         </TabPanel>
       </Paper>
+
+      {/* Match Detail Dialog */}
+      <MatchDetailDialog
+        open={matchDialogOpen}
+        onClose={() => {
+          setMatchDialogOpen(false);
+          setSelectedMatch(null);
+        }}
+        match={selectedMatch}
+        registrations={registrations}
+        judges={judges}
+        teamMembers={teamMembers}
+        tournamentId={tournament?.id || id || ''}
+      />
     </Container>
   );
 };

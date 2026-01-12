@@ -45,7 +45,7 @@ const LoginPage = () => {
     } catch (error) {
       console.error('Error signing in:', error);
       const errorMessage = (error as Error).message || '';
-      
+
       // Provide helpful error messages in Chinese
       if (errorMessage.includes('Invalid credentials') || errorMessage.includes('Invalid login')) {
         setError('姓名或密码错误，请检查后重试');
@@ -128,6 +128,32 @@ const LoginPage = () => {
                 {"还没有账号？立即注册"}
               </Link>
             </Typography>
+
+            <Box sx={{ my: 2, display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+              <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
+                或
+              </Typography>
+              <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+            </Box>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              sx={{
+                py: 1.5,
+                bgcolor: '#07C160',
+                color: 'white',
+                borderColor: '#07C160',
+                '&:hover': {
+                  bgcolor: '#06AD56',
+                  borderColor: '#06AD56',
+                }
+              }}
+              onClick={() => window.location.href = '/auth/wechat/login'}
+            >
+              使用微信登录
+            </Button>
           </CardContent>
         </Card>
       </Box>
