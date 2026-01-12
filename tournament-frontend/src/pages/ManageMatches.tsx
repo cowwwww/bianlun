@@ -59,9 +59,37 @@ const ManageMatches: React.FC = () => {
           listJudges(),
         ]);
         setMatches(mList);
-        setRegistrations(regList);
         setTeamMembers(memberList);
         setJudges(judgeList);
+
+        // If no registrations but we have team members, reconstruct teams from team_members
+        let finalRegistrations = regList;
+        if (regList.length === 0 && memberList.length > 0) {
+          const teamMap = new Map<string, Registration>();
+          memberList.forEach(member => {
+            if (!teamMap.has(member.registrationId)) {
+              teamMap.set(member.registrationId, {
+                id: member.registrationId,
+                tournamentId: id!,
+                teamName: member.registrationId, // Will be updated if leader found
+                participants: [],
+                status: 'approved' as const,
+                paymentStatus: 'paid' as const,
+                createdAt: member.createdAt || '',
+                updatedAt: member.updatedAt || ''
+              });
+            }
+            const team = teamMap.get(member.registrationId)!;
+            team.participants.push(member.name);
+            // Use leader name as team name if found
+            if (member.role === 'leader' && team.teamName === member.registrationId) {
+              team.teamName = `${member.name}队`;
+            }
+          });
+          finalRegistrations = Array.from(teamMap.values());
+          console.log('Reconstructed teams from team_members:', finalRegistrations.length);
+        }
+        setRegistrations(finalRegistrations);
       } catch (err) {
         setError((err as Error).message || '加载对阵失败');
       } finally {
@@ -279,16 +307,16 @@ const ManageMatches: React.FC = () => {
                       <MenuItem value="">
                         <em>选择队员</em>
                       </MenuItem>
-                {teamMembers
+                      {teamMembers
                         .filter(m => m.registrationId === selectedSideA.id)
-                  .map(member => (
+                        .map(member => (
                           <MenuItem key={member.id} value={member.name}>
                             {member.name} ({member.school || '未知学校'}) - {member.role === 'leader' ? '领队' : member.role === 'accompanying_judge' ? '随评' : '队员'}
                           </MenuItem>
                         ))}
                     </Select>
                   </Box>
-                  ))}
+                ))}
               </Box>
             )}
           </Grid>
@@ -331,16 +359,16 @@ const ManageMatches: React.FC = () => {
                       <MenuItem value="">
                         <em>选择队员</em>
                       </MenuItem>
-                {teamMembers
+                      {teamMembers
                         .filter(m => m.registrationId === selectedSideB.id)
-                  .map(member => (
+                        .map(member => (
                           <MenuItem key={member.id} value={member.name}>
                             {member.name} ({member.school || '未知学校'}) - {member.role === 'leader' ? '领队' : member.role === 'accompanying_judge' ? '随评' : '队员'}
                           </MenuItem>
                         ))}
                     </Select>
                   </Box>
-                  ))}
+                ))}
               </Box>
             )}
           </Grid>

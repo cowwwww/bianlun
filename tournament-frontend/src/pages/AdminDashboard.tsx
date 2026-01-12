@@ -824,7 +824,7 @@ const AdminDashboard: React.FC = () => {
                     <TableRow>
                       <TableCell>队伍 / 组别</TableCell>
                       <TableCell>成员</TableCell>
-                      <TableCell>联系方式</TableCell>
+
                       <TableCell>审核状态</TableCell>
                       <TableCell>支付状态</TableCell>
                       <TableCell>操作</TableCell>
@@ -852,10 +852,6 @@ const AdminDashboard: React.FC = () => {
                           <Typography variant="body2">
                             {reg.participants?.join('，') || '未填写'}
                           </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">微信：{reg.wechatId || '无'}</Typography>
-                          <Typography variant="body2">电话：{reg.contact || '无'}</Typography>
                         </TableCell>
                         <TableCell>
                           <Select
@@ -1358,43 +1354,167 @@ const AdminDashboard: React.FC = () => {
         <DialogContent>
           {formConfig && (
             <Stack spacing={3} sx={{ mt: 1 }}>
-              {formConfig && (
-                <>
+              {/* Basic Settings */}
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>基本设置</Typography>
+                <TextField
+                  label="表单标题"
+                  value={formConfig.title}
+                  onChange={(e) => setFormConfig({ ...formConfig, title: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+
+                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
                   <TextField
-                    label="表单标题"
-                    value={formConfig.title}
-                    onChange={(e) => setFormConfig({ ...formConfig, title: e.target.value })}
-                    fullWidth
+                    label="最小队伍人数"
+                    type="number"
+                    value={formConfig.minTeamMembers}
+                    onChange={(e) => setFormConfig({ ...formConfig, minTeamMembers: Number(e.target.value) })}
                   />
+                  <TextField
+                    label="最大队伍人数"
+                    type="number"
+                    value={formConfig.maxTeamMembers}
+                    onChange={(e) => setFormConfig({ ...formConfig, maxTeamMembers: Number(e.target.value) })}
+                  />
+                </Stack>
 
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="最小队伍人数"
-                      type="number"
-                      value={formConfig.minTeamMembers}
-                      onChange={(e) => setFormConfig({ ...formConfig, minTeamMembers: Number(e.target.value) })}
-                    />
-                    <TextField
-                      label="最大队伍人数"
-                      type="number"
-                      value={formConfig.maxTeamMembers}
-                      onChange={(e) => setFormConfig({ ...formConfig, maxTeamMembers: Number(e.target.value) })}
-                    />
-                  </Stack>
+                <FormControl fullWidth>
+                  <InputLabel>允许随评选择</InputLabel>
+                  <Select
+                    value={formConfig.allowJudgeSelection ? 'true' : 'false'}
+                    onChange={(e) => setFormConfig({ ...formConfig, allowJudgeSelection: e.target.value === 'true' })}
+                    label="允许随评选择"
+                  >
+                    <MenuItem value="true">是</MenuItem>
+                    <MenuItem value="false">否</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
 
-                  <FormControl fullWidth>
-                    <InputLabel>允许随评选择</InputLabel>
-                    <Select
-                      value={formConfig.allowJudgeSelection}
-                      onChange={(e) => setFormConfig({ ...formConfig, allowJudgeSelection: e.target.value === 'true' })}
-                      label="允许随评选择"
-                    >
-                      <MenuItem value="true">是</MenuItem>
-                      <MenuItem value="false">否</MenuItem>
-                    </Select>
-                  </FormControl>
-                </>
-              )}
+              {/* Team Member Roles Configuration */}
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>队员角色配置</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  配置队伍中每种角色的设置（领队、随评、队员）
+                </Typography>
+
+                {formConfig.teamMemberRoles.map((role, index) => (
+                  <Paper key={role.id} variant="outlined" sx={{ p: 2, mb: 2 }}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                      <TextField
+                        label="角色名称"
+                        value={role.label}
+                        onChange={(e) => {
+                          const newRoles = [...formConfig.teamMemberRoles];
+                          newRoles[index] = { ...newRoles[index], label: e.target.value };
+                          setFormConfig({ ...formConfig, teamMemberRoles: newRoles });
+                        }}
+                        size="small"
+                        sx={{ minWidth: 120 }}
+                      />
+                      <FormControl size="small" sx={{ minWidth: 100 }}>
+                        <InputLabel>必选</InputLabel>
+                        <Select
+                          value={role.required ? 'true' : 'false'}
+                          onChange={(e) => {
+                            const newRoles = [...formConfig.teamMemberRoles];
+                            newRoles[index] = { ...newRoles[index], required: e.target.value === 'true' };
+                            setFormConfig({ ...formConfig, teamMemberRoles: newRoles });
+                          }}
+                          label="必选"
+                        >
+                          <MenuItem value="true">是</MenuItem>
+                          <MenuItem value="false">否</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        label="最大人数"
+                        type="number"
+                        value={role.maxCount || ''}
+                        onChange={(e) => {
+                          const newRoles = [...formConfig.teamMemberRoles];
+                          newRoles[index] = { ...newRoles[index], maxCount: Number(e.target.value) || undefined };
+                          setFormConfig({ ...formConfig, teamMemberRoles: newRoles });
+                        }}
+                        size="small"
+                        sx={{ maxWidth: 100 }}
+                      />
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          const newRoles = formConfig.teamMemberRoles.filter((_, i) => i !== index);
+                          setFormConfig({ ...formConfig, teamMemberRoles: newRoles });
+                        }}
+                        size="small"
+                      >
+                        ×
+                      </IconButton>
+                    </Stack>
+                  </Paper>
+                ))}
+
+                <Button
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    const newRole = {
+                      id: `role_${Date.now()}`,
+                      label: '新角色',
+                      required: false,
+                      maxCount: 5
+                    };
+                    setFormConfig({ ...formConfig, teamMemberRoles: [...formConfig.teamMemberRoles, newRole] });
+                  }}
+                >
+                  添加角色
+                </Button>
+              </Box>
+
+              {/* Team Member Fields Info */}
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>队员信息字段</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  每个队员需要填写以下信息（均为文本字段）
+                </Typography>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>字段</TableCell>
+                      <TableCell>说明</TableCell>
+                      <TableCell>必填</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>姓名 (name)</TableCell>
+                      <TableCell>队员真实姓名</TableCell>
+                      <TableCell><Chip label="是" size="small" color="primary" /></TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>学校 (school)</TableCell>
+                      <TableCell>所在学校</TableCell>
+                      <TableCell><Chip label="是" size="small" color="primary" /></TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>年级 (year)</TableCell>
+                      <TableCell>如：2023级、高二</TableCell>
+                      <TableCell><Chip label="是" size="small" color="primary" /></TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>微信号 (wechatId)</TableCell>
+                      <TableCell>联系微信</TableCell>
+                      <TableCell><Chip label="是" size="small" color="primary" /></TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>电话 (phone)</TableCell>
+                      <TableCell>联系电话</TableCell>
+                      <TableCell><Chip label="是" size="small" color="primary" /></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </Box>
             </Stack>
           )}
         </DialogContent>
