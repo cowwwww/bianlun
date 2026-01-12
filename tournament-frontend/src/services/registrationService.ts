@@ -67,12 +67,23 @@ const mapRecord = (record: any): Registration => ({
 export const listRegistrationsByTournament = async (tournamentId: string): Promise<Registration[]> => {
   try {
     console.log('Fetching registrations for tournament:', tournamentId);
-    const records = await pb.collection('registrations').getFullList({
-      sort: '-created',
-      filter: `tournamentId="${tournamentId}"`,
-    });
-    console.log('Raw records from PocketBase:', records.length, records);
-    const mapped = records.map(mapRecord);
+
+    // Try server-side filter first; if PB rejects the filter (400), fall back to client-side filtering
+    let records = [];
+    try {
+      records = await pb.collection('registrations').getFullList({
+        sort: '-created',
+        filter: `tournamentId="${tournamentId}"`,
+      });
+    } catch (err) {
+      console.warn('Filter failed, falling back to client-side filter:', (err as Error)?.message);
+      records = await pb.collection('registrations').getFullList({
+        sort: '-created',
+      });
+    }
+
+    console.log('Raw records from PocketBase:', records.length);
+    const mapped = records.map(mapRecord).filter((r) => r.tournamentId === tournamentId);
     const merged = [
       ...staticRegistrations.filter((s) => s.tournamentId === tournamentId && !mapped.find((m) => m.id === s.id)),
       ...mapped,
