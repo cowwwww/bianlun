@@ -11,8 +11,7 @@ export interface TimerProject {
   updatedAt: string;
 }
 
-// Support both the new collection name ("timers") and the old one ("timer_projects")
-const COLLECTION_CANDIDATES = ['timers', 'timer_projects'];
+const COLLECTION_CANDIDATES = ['timers'];
 let resolvedCollection: string | null = null;
 
 const resolveCollectionName = async (): Promise<string> => {
@@ -40,10 +39,14 @@ const resolveCollectionName = async (): Promise<string> => {
 export const getTimerProjects = async (): Promise<TimerProject[]> => {
   try {
     const collectionName = await resolveCollectionName();
-    const records = await pb.collection(collectionName).getFullList({
-      sort: '-created',
-    });
-    
+    console.log('[TimerService] Fetching from collection:', collectionName);
+
+    // Use getFullList with no parameters - simplest possible query
+    const records = await pb.collection(collectionName).getFullList();
+
+    console.log('[TimerService] Fetched', records.length, 'timer projects');
+    console.log('[TimerService] Raw data:', records);
+
     return records.map(record => ({
       id: record.id,
       name: record.name || '',
@@ -54,9 +57,17 @@ export const getTimerProjects = async (): Promise<TimerProject[]> => {
       createdAt: record.created || '',
       updatedAt: record.updated || '',
     }));
-  } catch (error) {
-    console.error('Error fetching timer projects:', error);
-    // Return empty array if collection doesn't exist yet
+  } catch (error: any) {
+    console.error('[TimerService] Error fetching timer projects:', error);
+    console.log('[TimerService] Full error object:', JSON.stringify(error, null, 2));
+    console.error('[TimerService] Error details:', {
+      status: error?.status,
+      message: error?.message,
+      data: error?.data,
+      response: error?.response,
+      url: error?.url,
+    });
+    // Return empty array if collection doesn't exist or has issues
     return [];
   }
 };
@@ -65,7 +76,7 @@ export const getTimerProjectById = async (id: string): Promise<TimerProject | nu
   try {
     const collectionName = await resolveCollectionName();
     const record = await pb.collection(collectionName).getOne(id);
-    
+
     return {
       id: record.id,
       name: record.name || '',
@@ -86,7 +97,7 @@ export const createTimerProject = async (project: Omit<TimerProject, 'id' | 'cre
   try {
     const collectionName = await resolveCollectionName();
     const record = await pb.collection(collectionName).create(project);
-    
+
     return {
       ...project,
       id: record.id,
