@@ -71,19 +71,19 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const image = new window.Image();
     image.crossOrigin = 'anonymous'; // Add this to handle cross-origin issues
-    
+
     image.onload = () => {
       try {
         const canvas = document.createElement('canvas');
         canvas.width = crop.width;
         canvas.height = crop.height;
         const ctx = canvas.getContext('2d');
-        
+
         if (!ctx) {
           reject(new Error('No 2d context available'));
           return;
         }
-        
+
         ctx.drawImage(
           image,
           crop.x,
@@ -95,7 +95,7 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
           crop.width,
           crop.height
         );
-        
+
         canvas.toBlob((blob) => {
           if (blob) {
             resolve(blob);
@@ -107,11 +107,11 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
         reject(error);
       }
     };
-    
+
     image.onerror = () => {
       reject(new Error('Failed to load image'));
     };
-    
+
     image.src = imageSrc;
   });
 }
@@ -433,10 +433,10 @@ const RunTimer = () => {
   useEffect(() => {
     warningPlayedRef.current = false;
     finishedPlayedRef.current = false;
-    loadAudio().catch(() => {});
+    loadAudio().catch(() => { });
   }, [currentStepIndex, project]);
 
-   // Timer effect (handles both timers)
+  // Timer effect (handles both timers)
   useEffect(() => {
     if (isActive && !isPaused) {
       const currentStep = project?.timerSteps[currentStepIndex];
@@ -444,20 +444,20 @@ const RunTimer = () => {
       if (currentStep?.isDualTimer) {
         // Dual timer logic
         if (activeTimer === 1) {
-            intervalRef1.current = window.setInterval(() => {
-                setTimeRemaining((time) => Math.max(0, time - 1));
-            }, 1000);
-            if (intervalRef2.current) clearInterval(intervalRef2.current);
+          intervalRef1.current = window.setInterval(() => {
+            setTimeRemaining((time) => Math.max(0, time - 1));
+          }, 1000);
+          if (intervalRef2.current) clearInterval(intervalRef2.current);
         } else if (activeTimer === 2) {
-             intervalRef2.current = window.setInterval(() => {
-                setTimeRemaining2((time) => Math.max(0, time - 1));
-            }, 1000);
-            if (intervalRef1.current) clearInterval(intervalRef1.current);
+          intervalRef2.current = window.setInterval(() => {
+            setTimeRemaining2((time) => Math.max(0, time - 1));
+          }, 1000);
+          if (intervalRef1.current) clearInterval(intervalRef1.current);
         }
       } else {
         // Single timer logic
-         intervalRef1.current = window.setInterval(() => {
-            setTimeRemaining((time) => Math.max(0, time - 1));
+        intervalRef1.current = window.setInterval(() => {
+          setTimeRemaining((time) => Math.max(0, time - 1));
         }, 1000);
         if (intervalRef2.current) clearInterval(intervalRef2.current);
       }
@@ -572,55 +572,55 @@ const RunTimer = () => {
 
   const handleStartPauseResume = () => {
     if (!isActive) {
-        // Starting the timer from CURRENT step, not step 0
-        if (project && project.timerSteps.length > 0) {
-             setIsActive(true);
-             setIsPaused(false);
-             // Use current step instead of always going to 0
-             const currentStep = project.timerSteps[currentStepIndex];
-             setCurrentStepLabel(currentStep.label);
-             // Only reset time if it's already at 0, otherwise continue from current time
-             if (timeRemaining === 0) {
-                 setTimeRemaining(currentStep.duration);
-             }
-             if (currentStep.isDualTimer) {
-                 if (timeRemaining2 === 0) {
-                     setTimeRemaining2(currentStep.duration);
-                 }
-                 if (activeTimer === 0) {
-                     setActiveTimer(1); // Start with timer 1 active for dual
-                 }
-             } else {
-                 setTimeRemaining2(0);
-                 setActiveTimer(0);
-             }
-        }
-    } else if (isPaused) {
-        // Resuming the timer
+      // Starting the timer from CURRENT step, not step 0
+      if (project && project.timerSteps.length > 0) {
+        setIsActive(true);
         setIsPaused(false);
+        // Use current step instead of always going to 0
+        const currentStep = project.timerSteps[currentStepIndex];
+        setCurrentStepLabel(currentStep.label);
+        // Only reset time if it's already at 0, otherwise continue from current time
+        if (timeRemaining === 0) {
+          setTimeRemaining(currentStep.duration);
+        }
+        if (currentStep.isDualTimer) {
+          if (timeRemaining2 === 0) {
+            setTimeRemaining2(currentStep.duration);
+          }
+          if (activeTimer === 0) {
+            setActiveTimer(1); // Start with timer 1 active for dual
+          }
+        } else {
+          setTimeRemaining2(0);
+          setActiveTimer(0);
+        }
+      }
+    } else if (isPaused) {
+      // Resuming the timer
+      setIsPaused(false);
     } else {
-        // Pausing the timer
-        setIsPaused(true);
+      // Pausing the timer
+      setIsPaused(true);
     }
   };
 
-   const handleSwitchTimers = () => {
-        const currentStep = project?.timerSteps[currentStepIndex];
-        if (currentStep?.isDualTimer) {
-             if (!isActive) {
-                 // If timer is not active, start it and set to timer 2
-                 setIsActive(true);
-                 setIsPaused(false);
-                 // Ensure timeRemaining and timeRemaining2 are set for the current step
-                 setTimeRemaining(currentStep.duration);
-                 setTimeRemaining2(currentStep.duration);
-                 setActiveTimer(2);
-             } else {
-                 // If timer is active or paused, just switch the active timer
-                 setActiveTimer(prev => (prev === 1 ? 2 : 1));
-             }
-        }
-   };
+  const handleSwitchTimers = () => {
+    const currentStep = project?.timerSteps[currentStepIndex];
+    if (currentStep?.isDualTimer) {
+      if (!isActive) {
+        // If timer is not active, start it and set to timer 2
+        setIsActive(true);
+        setIsPaused(false);
+        // Ensure timeRemaining and timeRemaining2 are set for the current step
+        setTimeRemaining(currentStep.duration);
+        setTimeRemaining2(currentStep.duration);
+        setActiveTimer(2);
+      } else {
+        // If timer is active or paused, just switch the active timer
+        setActiveTimer(prev => (prev === 1 ? 2 : 1));
+      }
+    }
+  };
 
   const handleResetTimer = () => {
     setIsActive(false);
@@ -628,8 +628,8 @@ const RunTimer = () => {
     setCurrentStepIndex(0);
     setTimeRemaining(project?.timerSteps[0]?.duration || 0);
     setCurrentStepLabel(project?.timerSteps[0]?.label || 'Select a project');
-     setTimeRemaining2(project?.timerSteps[0]?.isDualTimer ? project?.timerSteps[0]?.duration || 0 : 0);
-     setActiveTimer(project?.timerSteps[0]?.isDualTimer ? 1 : 0);
+    setTimeRemaining2(project?.timerSteps[0]?.isDualTimer ? project?.timerSteps[0]?.duration || 0 : 0);
+    setActiveTimer(project?.timerSteps[0]?.isDualTimer ? 1 : 0);
 
     if (intervalRef1.current) clearInterval(intervalRef1.current);
     if (intervalRef2.current) clearInterval(intervalRef2.current);
@@ -637,43 +637,43 @@ const RunTimer = () => {
 
   const handlePreviousStep = () => {
     if (currentStepIndex > 0 && project) {
-        const prevStepIndex = currentStepIndex - 1;
-        const prevStep = project.timerSteps[prevStepIndex];
-        setIsActive(false); // Stop timer
-        setIsPaused(false); // Reset paused state
-        setCurrentStepIndex(prevStepIndex);
-        setTimeRemaining(prevStep.duration);
-        setCurrentStepLabel(prevStep.label);
-        if (prevStep.isDualTimer) {
-            setTimeRemaining2(prevStep.duration);
-            setActiveTimer(1); // Reset to timer 1 for the previous dual step
-        } else {
-            setTimeRemaining2(0);
-            setActiveTimer(0);
-        }
-         if (intervalRef1.current) clearInterval(intervalRef1.current);
-         if (intervalRef2.current) clearInterval(intervalRef2.current);
+      const prevStepIndex = currentStepIndex - 1;
+      const prevStep = project.timerSteps[prevStepIndex];
+      setIsActive(false); // Stop timer
+      setIsPaused(false); // Reset paused state
+      setCurrentStepIndex(prevStepIndex);
+      setTimeRemaining(prevStep.duration);
+      setCurrentStepLabel(prevStep.label);
+      if (prevStep.isDualTimer) {
+        setTimeRemaining2(prevStep.duration);
+        setActiveTimer(1); // Reset to timer 1 for the previous dual step
+      } else {
+        setTimeRemaining2(0);
+        setActiveTimer(0);
+      }
+      if (intervalRef1.current) clearInterval(intervalRef1.current);
+      if (intervalRef2.current) clearInterval(intervalRef2.current);
     }
   };
 
   const handleNextStep = () => {
     if (project && currentStepIndex < project.timerSteps.length - 1) {
-        const nextStepIndex = currentStepIndex + 1;
-        const nextStep = project.timerSteps[nextStepIndex];
-         setIsActive(false); // Stop timer
-         setIsPaused(false); // Reset paused state
-        setCurrentStepIndex(nextStepIndex);
-        setTimeRemaining(nextStep.duration);
-        setCurrentStepLabel(nextStep.label);
-         if (nextStep.isDualTimer) {
-             setTimeRemaining2(nextStep.duration);
-             setActiveTimer(1); // Reset to timer 1 for the next dual step
-         } else {
-             setTimeRemaining2(0);
-             setActiveTimer(0);
-         }
-         if (intervalRef1.current) clearInterval(intervalRef1.current);
-         if (intervalRef2.current) clearInterval(intervalRef2.current);
+      const nextStepIndex = currentStepIndex + 1;
+      const nextStep = project.timerSteps[nextStepIndex];
+      setIsActive(false); // Stop timer
+      setIsPaused(false); // Reset paused state
+      setCurrentStepIndex(nextStepIndex);
+      setTimeRemaining(nextStep.duration);
+      setCurrentStepLabel(nextStep.label);
+      if (nextStep.isDualTimer) {
+        setTimeRemaining2(nextStep.duration);
+        setActiveTimer(1); // Reset to timer 1 for the next dual step
+      } else {
+        setTimeRemaining2(0);
+        setActiveTimer(0);
+      }
+      if (intervalRef1.current) clearInterval(intervalRef1.current);
+      if (intervalRef2.current) clearInterval(intervalRef2.current);
     }
   };
 
@@ -722,80 +722,80 @@ const RunTimer = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-   const handleTeamLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>, team: 'positive' | 'negative') => {
-        const file = event.target.files?.[0];
-        if (!file) {
-            return;
+  const handleTeamLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>, team: 'positive' | 'negative') => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('请选择图片文件');
+      event.target.value = ''; // Reset file input
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('图片文件大小不能超过5MB');
+      event.target.value = ''; // Reset file input
+      return;
+    }
+
+    setSelectedLogoImage(file);
+    setLogoType(team);
+    setCropLogoDialogOpen(true);
+
+    // Reset the file input value to allow selecting the same file again
+    event.target.value = '';
+  };
+
+  const handleAddTime = () => {
+    const seconds = parseInt(timeAdjustmentSeconds, 10);
+    if (!isNaN(seconds) && seconds > 0) {
+      const currentStep = project?.timerSteps[currentStepIndex];
+      if (currentStep?.isDualTimer) {
+        if (activeTimer === 1) {
+          setTimeRemaining(prev => prev + seconds);
+        } else if (activeTimer === 2) {
+          setTimeRemaining2(prev => prev + seconds);
         }
+      } else {
+        setTimeRemaining(prev => prev + seconds);
+      }
+      console.log(`Added ${seconds} seconds to timer`); // Log time addition
+    } else if (!isNaN(seconds) && seconds <= 0) {
+      alert('Please enter a positive number of seconds.');
+    } else {
+      alert('Please enter a valid number of seconds.');
+    }
+  };
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            alert('请选择图片文件');
-            event.target.value = ''; // Reset file input
-            return;
+  const handleSubtractTime = () => {
+    const seconds = parseInt(timeAdjustmentSeconds, 10);
+    if (!isNaN(seconds) && seconds > 0) {
+      const currentStep = project?.timerSteps[currentStepIndex];
+      if (currentStep?.isDualTimer) {
+        if (activeTimer === 1) {
+          setTimeRemaining(prev => Math.max(0, prev - seconds)); // Ensure time doesn't go below zero
+        } else if (activeTimer === 2) {
+          setTimeRemaining2(prev => Math.max(0, prev - seconds)); // Ensure time doesn't go below zero
         }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('图片文件大小不能超过5MB');
-            event.target.value = ''; // Reset file input
-            return;
-        }
-
-        setSelectedLogoImage(file);
-        setLogoType(team);
-        setCropLogoDialogOpen(true);
-        
-        // Reset the file input value to allow selecting the same file again
-        event.target.value = '';
-   };
-
-   const handleAddTime = () => {
-        const seconds = parseInt(timeAdjustmentSeconds, 10);
-        if (!isNaN(seconds) && seconds > 0) {
-            const currentStep = project?.timerSteps[currentStepIndex];
-            if (currentStep?.isDualTimer) {
-                if (activeTimer === 1) {
-                    setTimeRemaining(prev => prev + seconds);
-                } else if (activeTimer === 2) {
-                    setTimeRemaining2(prev => prev + seconds);
-                }
-            } else {
-                setTimeRemaining(prev => prev + seconds);
-            }
-             console.log(`Added ${seconds} seconds to timer`); // Log time addition
-        } else if (!isNaN(seconds) && seconds <= 0) {
-             alert('Please enter a positive number of seconds.');
-        } else {
-             alert('Please enter a valid number of seconds.');
-        }
-   };
-
-   const handleSubtractTime = () => {
-        const seconds = parseInt(timeAdjustmentSeconds, 10);
-        if (!isNaN(seconds) && seconds > 0) {
-            const currentStep = project?.timerSteps[currentStepIndex];
-            if (currentStep?.isDualTimer) {
-                if (activeTimer === 1) {
-                    setTimeRemaining(prev => Math.max(0, prev - seconds)); // Ensure time doesn't go below zero
-                } else if (activeTimer === 2) {
-                    setTimeRemaining2(prev => Math.max(0, prev - seconds)); // Ensure time doesn't go below zero
-                }
-            } else {
-                setTimeRemaining(prev => Math.max(0, prev - seconds)); // Ensure time doesn't go below zero
-            }
-             console.log(`Subtracted ${seconds} seconds from timer`); // Log time subtraction
-        } else if (!isNaN(seconds) && seconds <= 0) {
-             alert('Please enter a positive number of seconds to subtract.');
-        } else {
-             alert('Please enter a valid number of seconds.');
-        }
-   };
+      } else {
+        setTimeRemaining(prev => Math.max(0, prev - seconds)); // Ensure time doesn't go below zero
+      }
+      console.log(`Subtracted ${seconds} seconds from timer`); // Log time subtraction
+    } else if (!isNaN(seconds) && seconds <= 0) {
+      alert('Please enter a positive number of seconds to subtract.');
+    } else {
+      alert('Please enter a valid number of seconds.');
+    }
+  };
 
 
-   const toggleRunSettings = () => {
-        setShowRunSettings(prev => !prev);
-   };
+  const toggleRunSettings = () => {
+    setShowRunSettings(prev => !prev);
+  };
 
   // Add updateProject function before the return statement
   const updateProject = async (updates: Partial<Project>) => {
@@ -947,23 +947,23 @@ const RunTimer = () => {
     try {
       // Create object URL for the selected image
       const imageUrl = URL.createObjectURL(selectedLogoImage);
-      
+
       // Get cropped image blob
       const croppedImageBlob = await getCroppedImg(imageUrl, croppedLogoAreaPixels);
-      
+
       // Clean up the object URL
       URL.revokeObjectURL(imageUrl);
-      
+
       // Create local URL for display (no Firebase upload)
       const localLogoUrl = URL.createObjectURL(croppedImageBlob);
-      
+
       // Update state with the local logo URL
       if (logoType === 'positive') {
         setPositiveTeamLogo(localLogoUrl);
       } else {
         setNegativeTeamLogo(localLogoUrl);
       }
-      
+
       // Close dialog and reset state
       setCropLogoDialogOpen(false);
       setSelectedLogoImage(null);
@@ -971,10 +971,10 @@ const RunTimer = () => {
       setCroppedLogoAreaPixels(null);
       setLogoCrop({ x: 0, y: 0 });
       setLogoZoom(1);
-      
+
     } catch (error) {
       console.error(`Error processing ${logoType} team logo:`, error);
-      
+
       // Provide more specific error messages
       let errorMessage = '处理队徽失败';
       if (error instanceof Error) {
@@ -988,7 +988,7 @@ const RunTimer = () => {
           errorMessage = `处理失败: ${error.message}`;
         }
       }
-      
+
       alert(errorMessage);
     }
   };
@@ -1008,7 +1008,7 @@ const RunTimer = () => {
   }
 
   if (!project) {
-      return <Box sx={{ p: 3 }}>Project not found or loaded.</Box>;
+    return <Box sx={{ p: 3 }}>Project not found or loaded.</Box>;
   }
 
   return (
@@ -1067,34 +1067,34 @@ const RunTimer = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', mt: 1 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               {positiveTeamLogo && (
-                <img 
-                  src={positiveTeamLogo} 
-                  alt="Positive Team Logo" 
-                  style={{ 
-                    width: 60, 
-                    height: 60, 
+                <img
+                  src={positiveTeamLogo}
+                  alt="Positive Team Logo"
+                  style={{
+                    width: 60,
+                    height: 60,
                     objectFit: 'cover',
                     borderRadius: '8px',
                     border: '2px solid rgba(255,255,255,0.3)',
                     marginBottom: '8px'
-                  }} 
+                  }}
                 />
               )}
               <Typography variant="h5"> {positiveTeam}</Typography>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               {negativeTeamLogo && (
-                <img 
-                  src={negativeTeamLogo} 
-                  alt="Negative Team Logo" 
-                  style={{ 
-                    width: 60, 
-                    height: 60, 
+                <img
+                  src={negativeTeamLogo}
+                  alt="Negative Team Logo"
+                  style={{
+                    width: 60,
+                    height: 60,
                     objectFit: 'cover',
                     borderRadius: '8px',
                     border: '2px solid rgba(255,255,255,0.3)',
                     marginBottom: '8px'
-                  }} 
+                  }}
                 />
               )}
               <Typography variant="h5">{negativeTeam}</Typography>
@@ -1132,41 +1132,53 @@ const RunTimer = () => {
               时间到！
             </Box>
           )}
-          
+
           {isDualTimerStep ? (
             // Dual Timer Display
-            <Box sx={{ display: 'flex', gap: 8 }}>
-              <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h1" sx={{ mt: 2 }}>
-                  正方
-                </Typography>
-                <Typography 
-                  sx={{ 
-                    fontSize: '8rem',
-                    lineHeight: 1,
-                    fontWeight: 'bold',
-                    color: activeTimer === 1 ? activeTimerColor : textColor 
-                  }}
-                >
-                  {formatTime(timeRemaining)}
-                </Typography>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 'bold',
+                  mb: 2,
+                  fontSize: { xs: '2.25rem', md: '3rem' },
+                }}
+              >
+                {currentStepLabel}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h1" sx={{ mt: 2 }}>
+                    正方
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: '8rem',
+                      lineHeight: 1,
+                      fontWeight: 'bold',
+                      color: activeTimer === 1 ? activeTimerColor : textColor
+                    }}
+                  >
+                    {formatTime(timeRemaining)}
+                  </Typography>
 
-              </Box>
-              <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h1" sx={{ mt: 2 }}>
-                  反方
-                </Typography>
-                <Typography 
-                  sx={{ 
-                    fontSize: '8rem',
-                    lineHeight: 1,
-                    fontWeight: 'bold',
-                    color: activeTimer === 2 ? activeTimerColor : textColor 
-                  }}
-                >
-                  {formatTime(timeRemaining2)}
-                </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h1" sx={{ mt: 2 }}>
+                    反方
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: '8rem',
+                      lineHeight: 1,
+                      fontWeight: 'bold',
+                      color: activeTimer === 2 ? activeTimerColor : textColor
+                    }}
+                  >
+                    {formatTime(timeRemaining2)}
+                  </Typography>
 
+                </Box>
               </Box>
             </Box>
           ) : (
@@ -1182,8 +1194,8 @@ const RunTimer = () => {
               >
                 {currentStepLabel}
               </Typography>
-              <Typography 
-                sx={{ 
+              <Typography
+                sx={{
                   fontSize: '10rem',
                   lineHeight: 1,
                   fontWeight: 'bold'
@@ -1196,21 +1208,21 @@ const RunTimer = () => {
         </Box>
 
         {/* Timer Controls (Bottom) */}
-        <Box sx={{ 
-          p: 3, 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <Box sx={{
+          p: 3,
+          display: 'flex',
+          justifyContent: 'center',
           gap: 2,
           borderTop: '1px solid rgba(255,255,255,0.1)'
         }}>
           {project && project.timerSteps.length > 0 && (
-            <Button 
-              variant="outlined" 
-              onClick={handlePreviousStep} 
-              startIcon={<SkipPreviousIcon />} 
+            <Button
+              variant="outlined"
+              onClick={handlePreviousStep}
+              startIcon={<SkipPreviousIcon />}
               disabled={currentStepIndex === 0}
-              sx={{ 
-                color: textColor, 
+              sx={{
+                color: textColor,
                 borderColor: textColor,
                 '&:hover': {
                   borderColor: textColor,
@@ -1225,11 +1237,11 @@ const RunTimer = () => {
               上一步
             </Button>
           )}
-          <Button 
-            variant="contained" 
-            onClick={handleStartPauseResume} 
+          <Button
+            variant="contained"
+            onClick={handleStartPauseResume}
             disabled={!project || project.timerSteps.length === 0}
-            sx={{ 
+            sx={{
               bgcolor: activeTimerColor,
               '&:hover': {
                 bgcolor: activeTimerColor,
@@ -1255,12 +1267,12 @@ const RunTimer = () => {
             )}
           </Button>
           {isDualTimerStep && (
-            <Button 
-              variant="outlined" 
-              onClick={handleSwitchTimers} 
+            <Button
+              variant="outlined"
+              onClick={handleSwitchTimers}
               startIcon={<SwapHorizIcon />}
-              sx={{ 
-                color: textColor, 
+              sx={{
+                color: textColor,
                 borderColor: textColor,
                 '&:hover': {
                   borderColor: textColor,
@@ -1271,12 +1283,12 @@ const RunTimer = () => {
               切换计时方
             </Button>
           )}
-          <Button 
-            variant="outlined" 
-            onClick={handleResetTimer} 
+          <Button
+            variant="outlined"
+            onClick={handleResetTimer}
             startIcon={<StopIcon />}
-            sx={{ 
-              color: textColor, 
+            sx={{
+              color: textColor,
               borderColor: textColor,
               '&:hover': {
                 borderColor: textColor,
@@ -1287,13 +1299,13 @@ const RunTimer = () => {
             重置
           </Button>
           {project && project.timerSteps.length > 0 && (
-            <Button 
-              variant="outlined" 
-              onClick={handleNextStep} 
-              startIcon={<SkipNextIcon />} 
+            <Button
+              variant="outlined"
+              onClick={handleNextStep}
+              startIcon={<SkipNextIcon />}
               disabled={currentStepIndex === (project.timerSteps.length - 1)}
-              sx={{ 
-                color: textColor, 
+              sx={{
+                color: textColor,
                 borderColor: textColor,
                 '&:hover': {
                   borderColor: textColor,
@@ -1355,18 +1367,18 @@ const RunTimer = () => {
       </Box>
 
       {/* Settings Panel */}
-      <Paper sx={{ 
-        p: 2, 
+      <Paper sx={{
+        p: 2,
         bgcolor: backgroundColor,
         color: textColor,
         borderTop: '1px solid rgba(255,255,255,0.1)'
       }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" gutterBottom>计时器设置</Typography>
-          <IconButton 
-            onClick={toggleRunSettings} 
+          <IconButton
+            onClick={toggleRunSettings}
             size="small"
-            sx={{ 
+            sx={{
               color: textColor,
               '&:hover': {
                 backgroundColor: 'rgba(255,255,255,0.1)'
@@ -1378,236 +1390,236 @@ const RunTimer = () => {
         </Box>
 
         <Collapse in={showRunSettings}>
-          <Card sx={{ 
-            mb: 2, 
-            p: 2, 
+          <Card sx={{
+            mb: 2,
+            p: 2,
             bgcolor: backgroundColor,
             color: textColor,
             borderRadius: 1,
             border: '1px solid rgba(255,255,255,0.1)'
           }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 2 }}>
-                <TextField
-                    label="轮次/赛事名称"
-                    value={debateRound}
-                    onChange={(e) => setDebateRound(e.target.value)}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: textColor,
-                        '& fieldset': {
-                          borderColor: 'rgba(255,255,255,0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255,255,255,0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: textColor,
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: textColor,
-                      },
-                    }}
-                />
-                <TextField
-                    label="正方/控方：队名"
-                    value={positiveTeam}
-                    onChange={(e) => setPositiveTeam(e.target.value)}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: textColor,
-                        '& fieldset': {
-                          borderColor: 'rgba(255,255,255,0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255,255,255,0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: textColor,
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: textColor,
-                      },
-                    }}
-                />
-                <TextField
-                    label="反方/控方：队名"
-                    value={negativeTeam}
-                    onChange={(e) => setNegativeTeam(e.target.value)}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: textColor,
-                        '& fieldset': {
-                          borderColor: 'rgba(255,255,255,0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255,255,255,0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: textColor,
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: textColor,
-                      },
-                    }}
-                />
-                <TextField
-                    label="评委 1"
-                    value={judge1}
-                    onChange={(e) => setJudge1(e.target.value)}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: textColor,
-                        '& fieldset': {
-                          borderColor: 'rgba(255,255,255,0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255,255,255,0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: textColor,
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: textColor,
-                      },
-                    }}
-                />
-                <TextField
-                    label="评委 2"
-                    value={judge2}
-                    onChange={(e) => setJudge2(e.target.value)}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: textColor,
-                        '& fieldset': {
-                          borderColor: 'rgba(255,255,255,0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255,255,255,0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: textColor,
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: textColor,
-                      },
-                    }}
-                />
-                <TextField
-                    label="评委 3"
-                    value={judge3}
-                    onChange={(e) => setJudge3(e.target.value)}
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: textColor,
-                        '& fieldset': {
-                          borderColor: 'rgba(255,255,255,0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255,255,255,0.5)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: textColor,
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: textColor,
-                      },
-                    }}
-                />
+              <TextField
+                label="轮次/赛事名称"
+                value={debateRound}
+                onChange={(e) => setDebateRound(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: textColor,
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: textColor,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: textColor,
+                  },
+                }}
+              />
+              <TextField
+                label="正方/控方：队名"
+                value={positiveTeam}
+                onChange={(e) => setPositiveTeam(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: textColor,
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: textColor,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: textColor,
+                  },
+                }}
+              />
+              <TextField
+                label="反方/控方：队名"
+                value={negativeTeam}
+                onChange={(e) => setNegativeTeam(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: textColor,
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: textColor,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: textColor,
+                  },
+                }}
+              />
+              <TextField
+                label="评委 1"
+                value={judge1}
+                onChange={(e) => setJudge1(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: textColor,
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: textColor,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: textColor,
+                  },
+                }}
+              />
+              <TextField
+                label="评委 2"
+                value={judge2}
+                onChange={(e) => setJudge2(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: textColor,
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: textColor,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: textColor,
+                  },
+                }}
+              />
+              <TextField
+                label="评委 3"
+                value={judge3}
+                onChange={(e) => setJudge3(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: textColor,
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: textColor,
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: textColor,
+                  },
+                }}
+              />
             </Box>
 
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mt: 2 }}>
-                自定义背景
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    背景图片
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mt: 2 }}>
+              自定义背景
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  背景图片
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    sx={{ color: textColor, borderColor: textColor }}
+                  >
+                    上传背景图片
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                    />
+                  </Button>
+                  {backgroundImage && (
                     <Button
                       variant="outlined"
-                      component="label"
+                      onClick={handleRemoveBackgroundImage}
                       sx={{ color: textColor, borderColor: textColor }}
                     >
-                      上传背景图片
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={handleImageSelect}
-                      />
+                      移除背景图片
                     </Button>
-                    {backgroundImage && (
-                      <Button
-                        variant="outlined"
-                        onClick={handleRemoveBackgroundImage}
-                        sx={{ color: textColor, borderColor: textColor }}
-                      >
-                        移除背景图片
-                      </Button>
-                    )}
-                  </Box>
-                  {backgroundImage && (
-                    <Box sx={{ mt: 2, maxWidth: 200 }}>
-                      <img
-                        src={backgroundImage}
-                        alt="Background preview"
-                        style={{ width: '100%', height: 'auto', borderRadius: 4 }}
-                      />
-                    </Box>
                   )}
                 </Box>
+                {backgroundImage && (
+                  <Box sx={{ mt: 2, maxWidth: 200 }}>
+                    <img
+                      src={backgroundImage}
+                      alt="Background preview"
+                      style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                    />
+                  </Box>
+                )}
               </Box>
+            </Box>
 
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Button 
-                  variant="contained" 
-                  component="label"
-                  sx={{
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  bgcolor: activeTimerColor,
+                  '&:hover': {
                     bgcolor: activeTimerColor,
-                    '&:hover': {
-                      bgcolor: activeTimerColor,
-                      filter: 'brightness(1.1)'
-                    }
-                  }}
-                >
-                    上传正方队徽
-                    <input type="file" hidden onChange={(e) => handleTeamLogoUpload(e, 'positive')} accept="image/*" />
-                </Button>
-                <Button 
-                  variant="contained" 
-                  component="label"
-                  sx={{
+                    filter: 'brightness(1.1)'
+                  }
+                }}
+              >
+                上传正方队徽
+                <input type="file" hidden onChange={(e) => handleTeamLogoUpload(e, 'positive')} accept="image/*" />
+              </Button>
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  bgcolor: activeTimerColor,
+                  '&:hover': {
                     bgcolor: activeTimerColor,
-                    '&:hover': {
-                      bgcolor: activeTimerColor,
-                      filter: 'brightness(1.1)'
-                    }
-                  }}
-                >
-                    上传反方队徽
-                    <input type="file" hidden onChange={(e) => handleTeamLogoUpload(e, 'negative')} accept="image/*" />
-                </Button>
+                    filter: 'brightness(1.1)'
+                  }
+                }}
+              >
+                上传反方队徽
+                <input type="file" hidden onChange={(e) => handleTeamLogoUpload(e, 'negative')} accept="image/*" />
+              </Button>
             </Box>
-            
+
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
               <TextField
                 label="调整秒数"
@@ -1635,9 +1647,9 @@ const RunTimer = () => {
                   },
                 }}
               />
-              <Button 
-                variant="contained" 
-                onClick={handleAddTime} 
+              <Button
+                variant="contained"
+                onClick={handleAddTime}
                 size="small"
                 sx={{
                   bgcolor: activeTimerColor,
@@ -1649,9 +1661,9 @@ const RunTimer = () => {
               >
                 增加时间
               </Button>
-              <Button 
-                variant="outlined" 
-                onClick={handleSubtractTime} 
+              <Button
+                variant="outlined"
+                onClick={handleSubtractTime}
                 size="small"
                 sx={{
                   color: textColor,
@@ -1791,7 +1803,7 @@ const RunTimer = () => {
                       type="color"
                       value={backgroundColor}
                       onChange={(e) => setBackgroundColor(e.target.value)}
-                      sx={{ 
+                      sx={{
                         width: 150,
                         '& .MuiOutlinedInput-root': {
                           height: 40,
@@ -1814,7 +1826,7 @@ const RunTimer = () => {
                       type="color"
                       value={textColor}
                       onChange={(e) => setTextColor(e.target.value)}
-                      sx={{ 
+                      sx={{
                         width: 150,
                         '& .MuiOutlinedInput-root': {
                           height: 40,
@@ -1837,7 +1849,7 @@ const RunTimer = () => {
                       type="color"
                       value={activeTimerColor}
                       onChange={(e) => setActiveTimerColor(e.target.value)}
-                      sx={{ 
+                      sx={{
                         width: 150,
                         '& .MuiOutlinedInput-root': {
                           height: 40,
@@ -1859,10 +1871,10 @@ const RunTimer = () => {
 
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}>
                 <Typography variant="body2" sx={{ color: textColor }}>预览:</Typography>
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 2, 
-                  p: 2, 
+                <Box sx={{
+                  display: 'flex',
+                  gap: 2,
+                  p: 2,
                   bgcolor: backgroundColor,
                   borderRadius: 1,
                   border: '1px solid rgba(255,255,255,0.1)',
@@ -1983,4 +1995,4 @@ const RunTimer = () => {
   );
 };
 
-export default RunTimer; 
+export default RunTimer;
