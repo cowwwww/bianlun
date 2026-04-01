@@ -14,7 +14,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/authService';
 
 const SignupPage = () => {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,46 +26,30 @@ const SignupPage = () => {
     setError(null);
     setLoading(true);
 
-    // Validation
-    if (!name?.trim()) {
+    if (!username?.trim()) {
+      setError('请输入用户名');
+      setLoading(false);
+      return;
+    }
+
+    if (!fullName?.trim()) {
       setError('请输入真实姓名');
       setLoading(false);
       return;
     }
 
-    if (!password) {
-      setError('请设置一个密码');
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('密码至少需要6个字符');
+    if (!password || password.length < 8) {
+      setError('密码至少需要8个字符');
       setLoading(false);
       return;
     }
 
     try {
-      // Create user with name and password
-      // Using name as both identifier and display name
-      await auth.signUp(name.trim(), password, name.trim());
-
-      console.log('User signed up successfully');
+      await auth.signUp(username.trim(), password, fullName.trim());
       navigate('/profile');
     } catch (error) {
       console.error('Error signing up:', error);
-      const errorMessage = (error as Error).message || '';
-      
-      // Handle specific error messages
-      if (errorMessage.includes('已被注册') || errorMessage.includes('already')) {
-        setError('该姓名已被注册，请直接登录或使用其他姓名');
-      } else if (errorMessage.includes('密码') || errorMessage.includes('password')) {
-        setError('密码不符合要求，请使用至少6位字符');
-      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        setError('网络连接失败，请检查网络后重试');
-      } else {
-        setError(errorMessage || '注册失败，请稍后重试');
-      }
+      setError((error as Error).message || '注册失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -97,32 +82,40 @@ const SignupPage = () => {
                 margin="normal"
                 required
                 fullWidth
-                id="name"
-                label="真实姓名"
-                name="name"
-                autoComplete="name"
+                id="username"
+                label="用户名"
+                name="username"
+                autoComplete="username"
                 autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="请输入您的真实姓名（支持中文）"
-                inputProps={{
-                  pattern: '.*',
-                  inputMode: 'text',
-                }}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="设置一个用户名（用于登录）"
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="fullName"
+                label="真实姓名"
+                name="fullName"
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="请输入您的真实姓名"
               />
               <TextField
                 margin="normal"
                 required
                 fullWidth
                 name="password"
-                label="设置一个密码"
+                label="设置密码"
                 type="password"
                 id="password"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="至少6位字符"
-                helperText="密码至少需要6个字符"
+                placeholder="至少8位字符"
+                helperText="密码至少需要8个字符"
               />
               <Button
                 type="submit"
@@ -147,4 +140,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage; 
+export default SignupPage;

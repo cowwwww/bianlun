@@ -32,6 +32,7 @@ const ManageMatches: React.FC = () => {
   const [sideACompetingMembers, setSideACompetingMembers] = useState<Record<number, string>>({});
   const [sideBCompetingMembers, setSideBCompetingMembers] = useState<Record<number, string>>({});
   const [selectedJudges, setSelectedJudges] = useState<Judge[]>([]);
+  const [selectedChairman, setSelectedChairman] = useState<Judge | null>(null);
   const [regSearch, setRegSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,7 @@ const ManageMatches: React.FC = () => {
     sideAId: '',
     sideBId: '',
     judgeIds: [],
+    chairmanId: '',
     topicId: '',
     scheduledAt: '',
   });
@@ -142,6 +144,7 @@ const ManageMatches: React.FC = () => {
         sideAId: newMatch.sideAId || '',
         sideBId: newMatch.sideBId || '',
         judgeIds: newMatch.judgeIds || [],
+        chairmanId: newMatch.chairmanId || '',
         topicId: newMatch.topicId || '',
         scheduledAt: newMatch.scheduledAt || '',
         result: '',
@@ -164,6 +167,7 @@ const ManageMatches: React.FC = () => {
       setSideACompetingMembers({});
       setSideBCompetingMembers({});
       setSelectedJudges([]);
+      setSelectedChairman(null);
     } catch (err) {
       alert('创建失败，请检查字段');
       console.error(err);
@@ -388,6 +392,19 @@ const ManageMatches: React.FC = () => {
             )}
             sx={{ minWidth: 300 }}
           />
+          <Autocomplete
+            options={judges}
+            getOptionLabel={(judge) => `${judge.fullName} (${judge.judgeTypes?.[0] || '未分类'})`}
+            value={selectedChairman}
+            onChange={(_, newValue) => {
+              setSelectedChairman(newValue);
+              setNewMatch((p) => ({ ...p, chairmanId: newValue?.id || '' }));
+            }}
+            renderInput={(params) => (
+              <TextField {...params} label="选择主席" placeholder="选择比赛主席..." />
+            )}
+            sx={{ minWidth: 200 }}
+          />
           <TextField
             label="比赛时间"
             value={newMatch.scheduledAt || ''}
@@ -536,6 +553,13 @@ const ManageMatches: React.FC = () => {
                   value={judges.filter(j => m.judgeIds?.includes(j.id))}
                   onChange={(_, newValue) => handleUpdateField(m.id, 'judgeIds', newValue.map(j => j.id))}
                   renderInput={(params) => <TextField {...params} label="裁判" sx={{ mb: 1 }} />}
+                />
+                <Autocomplete
+                  options={judges}
+                  getOptionLabel={(judge) => `${judge.fullName} (${judge.judgeTypes?.[0] || '未分类'})`}
+                  value={judges.find(j => j.id === m.chairmanId) || null}
+                  onChange={(_, newValue) => handleUpdateField(m.id, 'chairmanId', newValue?.id || '')}
+                  renderInput={(params) => <TextField {...params} label="主席" sx={{ mb: 1 }} />}
                 />
                 <TextField
                   fullWidth

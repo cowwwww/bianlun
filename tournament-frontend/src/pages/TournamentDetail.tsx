@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import pb from '../services/pocketbase';
 import {
   Container,
   Typography,
@@ -12,21 +11,13 @@ import {
   Grid,
   Tabs,
   Tab,
-  Button,
-  TextField,
-  Alert,
-  Card,
-  CardContent,
 } from '@mui/material';
 import { getTournamentById, type Tournament } from '../services/tournamentService';
 import { listRegistrationsByTournament, type Registration } from '../services/registrationService';
 import { listMatchesByTournament, type Match } from '../services/matchService';
 import { getTournamentTeamMembers, type TeamMember } from '../services/teamMemberService';
 import { listJudges, type Judge } from '../services/judgeService';
-import { getMatchCheckins, checkinForMatch, type MatchCheckin } from '../services/checkinService';
-import { getMatchScores, submitMatchScore, getDefaultScoringDimensions, type MatchScore } from '../services/scoringService';
-import MatchDetailDialog from '../components/MatchDetailDialog';
-import TournamentBracket from '../components/TournamentBracket';
+import MatchDetailPanel from '../components/MatchDetailPanel';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -59,13 +50,7 @@ const TournamentDetail = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [judges, setJudges] = useState<Judge[]>([]);
   const [tabValue, setTabValue] = useState(0);
-  const [checkins, setCheckins] = useState<MatchCheckin[]>([]);
-  const [scores, setScores] = useState<MatchScore[]>([]);
-  const [checkinName, setCheckinName] = useState('');
-  const [selectedMatchForCheckin, setSelectedMatchForCheckin] = useState<string | null>(null);
-  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
-  const [matchViewMode, setMatchViewMode] = useState<'list' | 'bracket'>('list');
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -89,24 +74,16 @@ const TournamentDetail = () => {
 
       // If no registrations found from direct query, reconstruct from team members
       let finalRegData = regData;
-      if (regData.length === 0 && memberData.length > 0) {
-        // Try to get all registrations first to get actual team names
-        console.log('No direct registrations found, attempting to get all registrations...');
-        const allRegs = await pb.collection('registrations').getFullList();
-        const regNameMap = new Map(allRegs.map((r: any) => [r.id, r.teamName || r.name || '']));
-
+      if (regData.length === 0) {
         // Reconstruct registrations from team members
         const registrationMap = new Map();
 
         memberData.forEach(member => {
           if (!registrationMap.has(member.registrationId)) {
-            // Try to get actual team name from registrations
-            const actualTeamName = regNameMap.get(member.registrationId) || '';
-
             registrationMap.set(member.registrationId, {
               id: member.registrationId,
               tournamentId: tournamentId,
-              teamName: actualTeamName,
+              teamName: '',
               participants: [],
               status: 'approved' as const,
               paymentStatus: 'paid' as const,
@@ -118,7 +95,7 @@ const TournamentDetail = () => {
           const reg = registrationMap.get(member.registrationId);
           reg.participants.push(member.name);
 
-          // Only use leader name as fallback if no actual team name found
+          // Set team name from leader
           if (member.role === 'leader' && !reg.teamName) {
             reg.teamName = member.name.replace(/[（(]领队[）)]/g, '').trim();
           }
@@ -189,8 +166,6 @@ const TournamentDetail = () => {
             <Tab label="队伍信息" />
             <Tab label="评委信息" />
             <Tab label="比赛对阵" />
-            <Tab label="签到" />
-            <Tab label="评分" />
           </Tabs>
         </Box>
 
@@ -500,7 +475,7 @@ const TournamentDetail = () => {
                       {judge.year && ` ｜ ${judge.year}`}
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                      所属队伍：{registrations.find(r => r.id === judge.registrationId)?.teamName || '未知'}
+                      所属队伍：{judge.teamName || registrations.find(r => r.id === judge.registrationId)?.teamName || '未知'}
                     </Typography>
                     {judge.experience && (
                       <Box sx={{ mt: 2 }}>
@@ -520,59 +495,17 @@ const TournamentDetail = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-              比赛对阵
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant={matchViewMode === 'list' ? 'contained' : 'outlined'}
-                size="small"
-                onClick={() => setMatchViewMode('list')}
-              >
-                列表视图
-              </Button>
-              <Button
-                variant={matchViewMode === 'bracket' ? 'contained' : 'outlined'}
-                size="small"
-                onClick={() => setMatchViewMode('bracket')}
-              >
-                对阵图
-              </Button>
-            </Stack>
-          </Stack>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
+            比赛对阵
+          </Typography>
 
           {matches.length === 0 ? (
             <Typography color="text.secondary">暂未排出对阵</Typography>
-          ) : matchViewMode === 'bracket' ? (
-            <TournamentBracket
-              matches={matches}
-              registrations={registrations}
-              onMatchClick={(m) => {
-                setSelectedMatch(m);
-                setMatchDialogOpen(true);
-              }}
-            />
           ) : (
             <Grid container spacing={2}>
               {matches.map((m) => (
                 <Grid item xs={12} md={6} key={m.id}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        boxShadow: 2,
-                        borderColor: 'primary.main',
-                      }
-                    }}
-                    onClick={() => {
-                      setSelectedMatch(m);
-                      setMatchDialogOpen(true);
-                    }}
-                  >
+                  <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
                       {m.round || '未命名轮次'} {m.topicId ? `｜${m.topicId}` : '｜未设置辩题'}
                     </Typography>
@@ -589,50 +522,71 @@ const TournamentDetail = () => {
                       </Typography>
                     )}
 
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ my: 1 }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Chip
-                          label={registrations.find(r => r.id === m.sideAId)?.teamName || m.sideAId || '正方待定'}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      <strong>正方：</strong>{registrations.find(r => r.id === m.sideAId)?.teamName || m.sideAId || '待定'}
+                    </Typography>
+                    {m.sideACompetingMembers && m.sideACompetingMembers.length > 0 ? (
+                      <Box sx={{ ml: 2 }}>
+                        {m.sideACompetingMembers.map((member, index) => (
+                          <Typography key={index} variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                            {index === 0 ? '一辩' : index === 1 ? '二辩' : index === 2 ? '三辩' : '四辩'}：{member}
+                          </Typography>
+                        ))}
                       </Box>
-                      <Typography sx={{ mx: 1 }}>VS</Typography>
-                      <Box sx={{ flex: 1, textAlign: 'right' }}>
-                        <Chip
-                          label={registrations.find(r => r.id === m.sideBId)?.teamName || m.sideBId || '反方待定'}
-                          size="small"
-                          color="secondary"
-                          variant="outlined"
-                        />
+                    ) : null}
+
+                    <Typography variant="body2" sx={{ mt: 1, mb: 0.5 }}>
+                      <strong>反方：</strong>{registrations.find(r => r.id === m.sideBId)?.teamName || m.sideBId || '待定'}
+                    </Typography>
+                    {m.sideBCompetingMembers && m.sideBCompetingMembers.length > 0 ? (
+                      <Box sx={{ ml: 2 }}>
+                        {m.sideBCompetingMembers.map((member, index) => (
+                          <Typography key={index} variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                            {index === 0 ? '一辩' : index === 1 ? '二辩' : index === 2 ? '三辩' : '四辩'}：{member}
+                          </Typography>
+                        ))}
                       </Box>
-                    </Stack>
+                    ) : null}
 
                     <Typography variant="body2" sx={{ mt: 1 }}>
                       <strong>评委：</strong>{m.judgeIds?.length ? m.judgeIds.map(judgeId => judges.find(j => j.id === judgeId)?.fullName || judgeId).join('、') : '待分配'}
                     </Typography>
 
                     {m.result && (
-                      <Chip
-                        label={`结果：${m.result}`}
-                        size="small"
-                        color="success"
-                        sx={{ mt: 1 }}
-                      />
+                      <Typography variant="body2" color="primary.main" sx={{ mt: 1, fontWeight: 600 }}>
+                        结果：{m.result}
+                      </Typography>
                     )}
 
-                    <Button
-                      size="small"
-                      sx={{ mt: 1 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedMatch(m);
-                        setMatchDialogOpen(true);
-                      }}
-                    >
-                      查看详情 / 签到 / 评分 →
-                    </Button>
+                    {/* Toggle Match Detail Button */}
+                    <Box sx={{ mt: 2, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                      <Typography
+                        variant="body2"
+                        color="primary"
+                        sx={{ cursor: 'pointer', fontWeight: 500 }}
+                        onClick={() => setSelectedMatchId(selectedMatchId === m.id ? null : m.id)}
+                      >
+                        {selectedMatchId === m.id ? '收起详情 ▲' : '查看详情（签到/评分）▼'}
+                      </Typography>
+                    </Box>
+
+                    {/* Expanded Match Detail Panel */}
+                    {selectedMatchId === m.id && (
+                      <Box sx={{ mt: 2 }}>
+                        <MatchDetailPanel
+                          match={m}
+                          tournamentId={id || ''}
+                          sideAMembers={teamMembers.filter(tm => tm.registrationId === m.sideAId)}
+                          sideBMembers={teamMembers.filter(tm => tm.registrationId === m.sideBId)}
+                          judges={judges.filter(j => m.judgeIds?.includes(j.id))}
+                          sideATeamName={registrations.find(r => r.id === m.sideAId)?.teamName || '正方'}
+                          sideBTeamName={registrations.find(r => r.id === m.sideBId)?.teamName || '反方'}
+                          sideATeamId={m.sideAId}
+                          sideBTeamId={m.sideBId}
+                          isOrganizer={true}
+                        />
+                      </Box>
+                    )}
 
                   </Paper>
                 </Grid>
@@ -640,230 +594,7 @@ const TournamentDetail = () => {
             </Grid>
           )}
         </TabPanel>
-
-        {/* 签到 Tab */}
-        <TabPanel value={tabValue} index={4}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
-            比赛签到
-          </Typography>
-
-          <Alert severity="info" sx={{ mb: 3 }}>
-            请在比赛开始前15分钟进行签到。选择您参加的比赛，输入您的姓名完成签到。
-          </Alert>
-
-          {matches.length === 0 ? (
-            <Typography color="text.secondary">暂无比赛需要签到</Typography>
-          ) : (
-            <Grid container spacing={3}>
-              {matches.map((m) => {
-                const matchCheckins = checkins.filter(c => c.matchId === m.id);
-                const sideATeam = registrations.find(r => r.id === m.sideAId);
-                const sideBTeam = registrations.find(r => r.id === m.sideBId);
-
-                return (
-                  <Grid item xs={12} md={6} key={m.id}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                          {m.round || '未命名轮次'}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {m.scheduledAt ? new Date(m.scheduledAt).toLocaleString('zh-CN') : '时间待定'}
-                        </Typography>
-
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2">
-                            <strong>正方：</strong>{sideATeam?.teamName || m.sideAId || '待定'}
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>反方：</strong>{sideBTeam?.teamName || m.sideBId || '待定'}
-                          </Typography>
-                        </Box>
-
-                        <Divider sx={{ my: 2 }} />
-
-                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                          已签到 ({matchCheckins.length}人)：
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 2 }}>
-                          {matchCheckins.map((c) => (
-                            <Chip
-                              key={c.id}
-                              label={`${c.userName} (${c.userRole === 'judge' ? '评委' : c.position || '队员'})`}
-                              size="small"
-                              color={c.userRole === 'judge' ? 'info' : 'default'}
-                            />
-                          ))}
-                          {matchCheckins.length === 0 && (
-                            <Typography variant="body2" color="text.secondary">暂无人签到</Typography>
-                          )}
-                        </Stack>
-
-                        {selectedMatchForCheckin === m.id ? (
-                          <Stack spacing={2}>
-                            <TextField
-                              label="您的姓名"
-                              value={checkinName}
-                              onChange={(e) => setCheckinName(e.target.value)}
-                              size="small"
-                              fullWidth
-                            />
-                            <Stack direction="row" spacing={1}>
-                              <Button
-                                variant="contained"
-                                size="small"
-                                disabled={!checkinName.trim()}
-                                onClick={async () => {
-                                  try {
-                                    const result = await checkinForMatch({
-                                      matchId: m.id,
-                                      tournamentId: tournament?.id || id || '',
-                                      userName: checkinName,
-                                      userRole: 'player',
-                                    });
-                                    if (result) {
-                                      setCheckins([...checkins, result]);
-                                      setSelectedMatchForCheckin(null);
-                                      setCheckinName('');
-                                      alert('签到成功！');
-                                    }
-                                  } catch (error) {
-                                    alert('签到失败，请重试');
-                                  }
-                                }}
-                              >
-                                确认签到
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={() => {
-                                  setSelectedMatchForCheckin(null);
-                                  setCheckinName('');
-                                }}
-                              >
-                                取消
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        ) : (
-                          <Button
-                            variant="outlined"
-                            onClick={() => setSelectedMatchForCheckin(m.id)}
-                          >
-                            点击签到
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          )}
-        </TabPanel>
-
-        {/* 评分 Tab */}
-        <TabPanel value={tabValue} index={5}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
-            评委评分
-          </Typography>
-
-          <Alert severity="info" sx={{ mb: 3 }}>
-            评委请在比赛结束后提交评分。选择您评判的比赛，填写评分表。
-          </Alert>
-
-          {matches.length === 0 ? (
-            <Typography color="text.secondary">暂无比赛需要评分</Typography>
-          ) : (
-            <Grid container spacing={3}>
-              {matches.map((m) => {
-                const matchScoresList = scores.filter(s => s.matchId === m.id);
-                const sideATeam = registrations.find(r => r.id === m.sideAId);
-                const sideBTeam = registrations.find(r => r.id === m.sideBId);
-                const matchJudges = m.judgeIds?.map(jid => judges.find(j => j.id === jid)).filter(Boolean) || [];
-
-                return (
-                  <Grid item xs={12} md={6} key={m.id}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                          {m.round || '未命名轮次'}
-                        </Typography>
-
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2">
-                            <strong>正方：</strong>{sideATeam?.teamName || m.sideAId || '待定'}
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>反方：</strong>{sideBTeam?.teamName || m.sideBId || '待定'}
-                          </Typography>
-                          <Typography variant="body2" sx={{ mt: 1 }}>
-                            <strong>评委：</strong>{matchJudges.map(j => j?.fullName).join('、') || '待分配'}
-                          </Typography>
-                        </Box>
-
-                        <Divider sx={{ my: 2 }} />
-
-                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                          已提交评分 ({matchScoresList.length}):
-                        </Typography>
-                        {matchScoresList.length > 0 ? (
-                          <Stack spacing={1} sx={{ mb: 2 }}>
-                            {matchScoresList.map((s) => (
-                              <Paper key={s.id} variant="outlined" sx={{ p: 1.5 }}>
-                                <Typography variant="body2">
-                                  <strong>{s.judgeName}：</strong>
-                                  正方 {s.sideAScore} - {s.sideBScore} 反方
-                                  （{s.winner === 'A' ? '正方胜' : s.winner === 'B' ? '反方胜' : '平局'}）
-                                </Typography>
-                                {s.comments && (
-                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                    评语：{s.comments}
-                                  </Typography>
-                                )}
-                              </Paper>
-                            ))}
-                          </Stack>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            暂无评分
-                          </Typography>
-                        )}
-
-                        {m.result ? (
-                          <Chip
-                            label={`最终结果：${m.result}`}
-                            color="success"
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            比赛尚未结束或评分未完成
-                          </Typography>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          )}
-        </TabPanel>
       </Paper>
-
-      {/* Match Detail Dialog */}
-      <MatchDetailDialog
-        open={matchDialogOpen}
-        onClose={() => {
-          setMatchDialogOpen(false);
-          setSelectedMatch(null);
-        }}
-        match={selectedMatch}
-        registrations={registrations}
-        judges={judges}
-        teamMembers={teamMembers}
-        tournamentId={tournament?.id || id || ''}
-      />
     </Container>
   );
 };

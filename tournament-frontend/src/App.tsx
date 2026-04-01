@@ -28,11 +28,11 @@ import ManageMatches from './pages/ManageMatches';
 import TimerIntroduction from './pages/TimerIntroduction';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import TournamentOrganizer from './pages/TournamentOrganizer';
-import WeChatLogin from './pages/WeChatLogin';
-import WeChatCallback from './pages/WeChatCallback';
 import TournamentBracket from './pages/TournamentBracket';
 import RegistrationManagement from './pages/RegistrationManagement';
 import AdminDashboard from './pages/AdminDashboard';
+import CircuitPage from './pages/CircuitPage';
+
 
 function App() {
   return (
@@ -48,6 +48,7 @@ function App() {
             <Route path="/matches/:matchId/score" element={<MatchScorePage />} />
             <Route path="/my-matches" element={<MyMatches />} />
             <Route path="/tournaments/:id/manage-matches" element={<ManageMatches />} />
+            <Route path="/tournaments/:id/circuit" element={<CircuitPage />} />
             <Route path="/organizer/tournaments/:id/registrations" element={<RegistrationManagement />} />
             <Route path="/organizer/tournaments/:id/bracket" element={<TournamentBracket />} />
             <Route path="/registration-management" element={<RegistrationManagement />} />
@@ -71,8 +72,6 @@ function App() {
             <Route path="/timer-introduction" element={<TimerIntroduction />} />
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
             <Route path="/tournament-organizer" element={<TournamentOrganizer />} />
-            <Route path="/auth/wechat/login" element={<WeChatLogin />} />
-            <Route path="/auth/wechat/callback" element={<WeChatCallback />} />
             {/* Catch-all route - redirects to home for unknown routes */}
             <Route path="*" element={<Home />} />
           </Routes>

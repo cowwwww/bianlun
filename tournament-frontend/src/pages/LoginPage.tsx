@@ -14,7 +14,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/authService';
 
 const LoginPage = () => {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,9 +26,8 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // Validate name
-      if (!name?.trim()) {
-        setError('请输入真实姓名');
+      if (!username?.trim()) {
+        setError('请输入用户名');
         setLoading(false);
         return;
       }
@@ -39,21 +38,11 @@ const LoginPage = () => {
         return;
       }
 
-      // Login with name and password
-      await auth.signIn(name.trim(), password);
+      await auth.signIn(username.trim(), password);
       navigate('/profile');
     } catch (error) {
       console.error('Error signing in:', error);
-      const errorMessage = (error as Error).message || '';
-
-      // Provide helpful error messages in Chinese
-      if (errorMessage.includes('Invalid credentials') || errorMessage.includes('Invalid login')) {
-        setError('姓名或密码错误，请检查后重试');
-      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        setError('网络连接失败，请检查网络后重试');
-      } else {
-        setError('登录失败，请重试');
-      }
+      setError((error as Error).message || '登录失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -86,18 +75,14 @@ const LoginPage = () => {
                 margin="normal"
                 required
                 fullWidth
-                id="name"
-                label="真实姓名"
-                name="name"
-                autoComplete="name"
+                id="username"
+                label="用户名"
+                name="username"
+                autoComplete="username"
                 autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="请输入您的真实姓名（支持中文）"
-                inputProps={{
-                  pattern: '.*',
-                  inputMode: 'text',
-                }}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="请输入用户名"
               />
               <TextField
                 margin="normal"
@@ -128,32 +113,6 @@ const LoginPage = () => {
                 {"还没有账号？立即注册"}
               </Link>
             </Typography>
-
-            <Box sx={{ my: 2, display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
-              <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
-                或
-              </Typography>
-              <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
-            </Box>
-
-            <Button
-              fullWidth
-              variant="outlined"
-              sx={{
-                py: 1.5,
-                bgcolor: '#07C160',
-                color: 'white',
-                borderColor: '#07C160',
-                '&:hover': {
-                  bgcolor: '#06AD56',
-                  borderColor: '#06AD56',
-                }
-              }}
-              onClick={() => window.location.href = '/auth/wechat/login'}
-            >
-              使用微信登录
-            </Button>
           </CardContent>
         </Card>
       </Box>
@@ -161,4 +120,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

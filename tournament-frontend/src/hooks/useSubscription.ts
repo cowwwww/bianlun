@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { auth } from '../services/authService';
-import api from '../services/api';
 
 export type SubscriptionType = 'free' | 'monthly' | 'lifetime';
 

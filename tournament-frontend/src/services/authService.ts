@@ -16,32 +16,28 @@ class AuthService {
   private listeners: Array<(user: User | null) => void> = [];
 
   constructor() {
-    // Listen to auth state changes
     pb.authStore.onChange(() => {
       this.notifyListeners();
     });
   }
 
   getCurrentUser(): User | null {
-    // Check if we have a stored model (not using isValid since we use dummy token)
-    if (!pb.authStore.model) {
+    if (!pb.authStore.isValid || !pb.authStore.model) {
       return null;
     }
 
     const model = pb.authStore.model;
     return {
-      id: model.wechat_id || model.id,
-      name: model.full_name,
+      id: model.id,
+      name: model.name || model.username || '',
       wechatId: model.wechat_id,
     };
   }
 
   onAuthStateChanged(callback: (user: User | null) => void): () => void {
     this.listeners.push(callback);
-    // Immediately call with current state
     callback(this.getCurrentUser());
-    
-    // Return unsubscribe function
+
     return () => {
       this.listeners = this.listeners.filter(listener => listener !== callback);
     };
@@ -52,62 +48,49 @@ class AuthService {
     this.listeners.forEach(listener => listener(user));
   }
 
-  async signIn(name: string, password: string): Promise<User> {
+  async signIn(identity: string, password: string): Promise<User> {
     try {
-      // Simple database check - find user by full_name and verify password
-      const records = await pb.collection('users').getList(1, 1, {
-        filter: `full_name = "${name}" && password = "${password}"`
-      });
-      
-      if (records.items.length === 0) {
-        throw new Error('Invalid credentials');
-      }
-      
-      const user = records.items[0];
-      
-      // Store user info in authStore manually
-      pb.authStore.save('dummy-token', user);
-      
+      // Use PocketBase's built-in auth (supports username or email)
+      const authData = await pb.collection('users').authWithPassword(identity, password);
+
       return {
-        id: user.id,
-        name: user.full_name,
-        wechatId: user.wechat_id,
+        id: authData.record.id,
+        name: authData.record.name || authData.record.username || '',
+        wechatId: authData.record.wechat_id,
       };
     } catch (error) {
       console.error('Sign in error:', error);
-      throw new Error((error as Error).message || 'Failed to sign in');
+      throw new Error('用户名或密码错误');
     }
   }
 
-  async signUp(name: string, password: string, fullName: string): Promise<User> {
+  async signUp(username: string, password: string, fullName: string): Promise<User> {
     try {
-      // Simple create - just store the data directly
+      // Use PocketBase's proper user creation (password is hashed automatically)
       await pb.collection('users').create({
-        full_name: fullName,
-        password: password
+        username: username,
+        password: password,
+        passwordConfirm: password,
+        name: fullName,
       });
 
       // Auto sign in after signup
-      return await this.signIn(fullName, password);
+      return await this.signIn(username, password);
     } catch (error) {
       console.error('Sign up error:', error);
-      
-      // Parse PocketBase error response
-      const pbError = error as { response?: { data?: { full_name?: unknown; password?: unknown } }; message?: string };
-      if (pbError.response && pbError.response.data) {
+
+      const pbError = error as { response?: { data?: Record<string, unknown> }; message?: string };
+      if (pbError.response?.data) {
         const errorData = pbError.response.data;
-        
-        // Check for duplicate name
-        if (errorData.full_name) {
-          throw new Error('该姓名已被注册');
+
+        if (errorData.username) {
+          throw new Error('该用户名已被注册');
         }
-        
-        // Check for password validation errors
         if (errorData.password) {
-          throw new Error('密码不符合要求（至少6位字符）');
+          throw new Error('密码不符合要求（至少8位字符）');
         }
       }
-      
+
       throw new Error(pbError.message || '注册失败，请稍后重试');
     }
   }
@@ -119,20 +102,13 @@ class AuthService {
   async updateProfile(updates: Partial<User>): Promise<void> {
     try {
       const currentUser = this.getCurrentUser();
-      if (!currentUser || !currentUser.id) {
+      if (!currentUser?.id) {
         throw new Error('No user logged in');
       }
 
-      // Find user record by id
-      const records = await pb.collection('users').getList(1, 1, {
-        filter: `id = "${currentUser.id}"`
+      await pb.collection('users').update(currentUser.id, {
+        name: updates.name,
       });
-      
-      if (records.items.length > 0) {
-        await pb.collection('users').update(records.items[0].id, {
-          full_name: updates.name,
-        });
-      }
 
       this.notifyListeners();
     } catch (error) {
@@ -142,6 +118,5 @@ class AuthService {
   }
 }
 
-// Export singleton instance
 export const auth = new AuthService();
 export default auth;

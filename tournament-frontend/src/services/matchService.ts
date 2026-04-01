@@ -8,6 +8,7 @@ export interface Match {
   sideAId: string;
   sideBId: string;
   judgeIds: string[];
+  chairmanId?: string;
   topicId?: string;
   scheduledAt?: string;
   result?: string;
@@ -28,6 +29,7 @@ const mapRecord = (record: any): Match => ({
   sideAId: record.sideAId || record.sideA || '',
   sideBId: record.sideBId || record.sideB || '',
   judgeIds: record.judgeIds || [],
+  chairmanId: record.chairmanId || '',
   topicId: record.topicId || record.topic,
   scheduledAt: record.scheduledAt || record.date,
   result: record.result,

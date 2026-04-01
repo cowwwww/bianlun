@@ -10,21 +10,40 @@ export interface TeamMember {
   year?: string;
   contact?: string;
   experience?: string;
+  teamName?: string;
   isCompeting?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+/**
+ * Maps Chinese role names from PocketBase to internal role types
+ */
+const mapRole = (role: string): TeamMember['role'] => {
+  switch (role) {
+    case '领队':
+      return 'leader';
+    case '随评':
+      return 'accompanying_judge';
+    case '队员':
+    default:
+      return 'member';
+  }
+};
+
 const mapRecord = (record: any): TeamMember => ({
   id: record.id,
-  registrationId: record.registrationId,
-  tournamentId: record.tournamentId,
-  name: record.name,
-  role: record.role,
-  school: record.school,
-  year: record.year,
-  contact: record.contact,
-  experience: record.experience,
+  // PocketBase stores registration ID in 'teamname' field (relation field)
+  registrationId: record.teamname || record.registrationId || '',
+  tournamentId: record.tournamentId || '',
+  name: record.name || '',
+  // Translate Chinese role names to internal types
+  role: mapRole(record.role),
+  school: record.school || '',
+  year: record.year || '',
+  contact: record.contact || '',
+  experience: record.experience || '',
+  teamName: record.teamName || '',
   isCompeting: record.isCompeting || false,
   createdAt: record.created || '',
   updatedAt: record.updated || '',
